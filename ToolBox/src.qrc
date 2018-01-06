@@ -1,9 +1,10 @@
 <RCC>
     <qresource prefix="/new/prefix1"/>
     <qresource prefix="/new/prefix2">
-        <file>C:/Users/Yuyin/Desktop/icon.png</file>
-        <file>C:/Users/Yuyin/Desktop/icon2.png</file>
-        <file>C:/Users/Yuyin/Desktop/icon1.png</file>
-        <file>C:/Users/Yuyin/Desktop/bee.png</file>
+        <file>Image/bee.png</file>
+        <file>Image/icon1.png</file>
+        <file>Image/icon2.png</file>
+        <file>Image/logo.png</file>
+        <file>Image/logo.ico</file>
     </qresource>
 </RCC>

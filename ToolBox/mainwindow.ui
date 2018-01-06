@@ -20,9 +20,10 @@
    <string>ToolBox</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/new/prefix2/C:/Users/Yuyin/Desktop/icon1.png</normaloff>
-    <normalon>:/new/prefix2/C:/Users/Yuyin/Desktop/icon2.png</normalon>:/new/prefix2/C:/Users/Yuyin/Desktop/icon1.png</iconset>
+   <iconset resource="src.qrc">
+    <normaloff>:/new/prefix2/Image/logo.png</normaloff>
+    <normalon>:/new/prefix2/C:/Users/Yuyin/Desktop/icon2.png</normalon>
+    <selectedon>:/new/prefix2/Image/icon2.png</selectedon>:/new/prefix2/Image/logo.png</iconset>
   </property>
   <property name="windowOpacity">
    <double>7.000000000000000</double>
@@ -56,7 +57,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="Text2Hex">
        <property name="styleSheet">
@@ -326,7 +327,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>Info</string>
+        <string>About</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_8">
         <item>
@@ -363,7 +364,7 @@
             <item>
              <widget class="QLabel" name="picture">
               <property name="styleSheet">
-               <string notr="true">image: url(:/new/prefix2/C:/Users/Yuyin/Desktop/bee.png);</string>
+               <string notr="true">image: url(:/new/prefix2/Image/bee.png);</string>
               </property>
               <property name="text">
                <string/>
@@ -408,6 +409,8 @@
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="src.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -119,11 +119,20 @@ void MainWindow::on_convertBtn_clicked()
         return;
     }
     QTextStream qs(&loadfile);
-    QString str = qs.readAll();
-    ui->loadFileText->setPlainText(str);
+    //QString str = qs.readAll();
+    // ui->loadFileText->setPlainText(str);
 
     /*数据转换*/
-    QByteArray arr = text2Hex_handle(str);
+    QByteArray arr ;
+    QString str  = "";
+    for (;!qs.atEnd();)
+    {
+        QString temp;
+        temp = qs.readLine();
+        arr += text2Hex_handle(" "+temp);
+        str += temp + "\n";
+    }
+    ui->loadFileText->setPlainText(str);
     if (arr.isNull())
     {
         qDebug()<<"no string: " + QString(LABEL_STR);
