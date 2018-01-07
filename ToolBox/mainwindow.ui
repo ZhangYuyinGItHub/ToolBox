@@ -38,7 +38,7 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1">
     <property name="topMargin">
      <number>5</number>
     </property>
@@ -183,7 +183,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="Hex2Text">
        <attribute name="title">
         <string>Hex2Text</string>
        </attribute>
@@ -304,7 +304,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="Setting">
        <attribute name="title">
         <string>Setting</string>
        </attribute>
@@ -325,7 +325,12 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_3">
+      <widget class="QWidget" name="Packet">
+       <attribute name="title">
+        <string>Packet</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="About">
        <attribute name="title">
         <string>About</string>
        </attribute>

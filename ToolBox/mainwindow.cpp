@@ -9,6 +9,7 @@
 #include <QByteArrayData>
 #include <QDebug>
 
+
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
 #define  LABEL_VALUE_LEN   0x02
@@ -19,12 +20,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //    ui->picture->setScaledContents(true);
-    //    QPixmap mPix;
-    //        mPix.load(":/new/prefix2/C:/Users/Yuyin/Desktop/bee.png");//:/res/res/Logo.png
-    //        ui->picture->setPixmap(mPix);
-    //        mPix.scaled(ui->picture->x(),ui->picture->y());
-    //        ui->picture->resize(100,80);
+
+    pPacket = new Packet(ui->Packet);
+
+    //mPacket.show();
 }
 
 MainWindow::~MainWindow()
@@ -40,6 +39,7 @@ void MainWindow::on_loadBtn_clicked()
     ui->loadPathEdit->setText(filestr);
 
 
+    //pPacket->setVisible(true);
 }
 /*HEX转文本*/
 QString Hex2Text_handle(QByteArray input)

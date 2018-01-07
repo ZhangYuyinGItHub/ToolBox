@@ -27,10 +27,12 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     CRC/JQChecksum.cpp \
+    patcket/packet.cpp
 
 HEADERS += \
         mainwindow.h \
     CRC/JQChecksum.h \
+    patcket/packet.h
 
 FORMS += \
         mainwindow.ui
