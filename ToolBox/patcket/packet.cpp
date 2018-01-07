@@ -28,6 +28,7 @@ Packet::Packet(QWidget *parent) : QWidget(parent)
             this, &Packet::on_files_load_btn_clicked);
     connect(pPacketBtn,&QPushButton::pressed,
             this, &Packet::on_packet_btn_clicked);
+    connect(pPacketFileListView,&QListView::pressed,this,&Packet::on_file_list_pressed);
 
     /*设置图像展示的颜色*/
     pPacketMemView->setAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -125,10 +126,10 @@ void Packet::on_packet_btn_clicked()
     QStringList fileStrList = pPacketListModel->stringList();
 
     /*设置头部*/
-    QByteArray HeadArr;
-    QByteArray HexArr;
     qint64 offset = 0;
     /*文件的个数*/
+    HeadArr.clear();
+    HexArr.clear();
     HeadArr += (fileStrList.size());
     offset += 1;
     offset += 4*fileStrList.size();
@@ -168,3 +169,20 @@ void Packet::on_packet_btn_clicked()
     pPacketStatus->setText(tr("已合成")+QString::number(HeadArr[0])+tr("个文件."));
 }
 
+void Packet::on_file_list_pressed(QModelIndex index)
+{
+    qDebug() << pPacketListModel->stringList().at(index.row());
+    QFile selectedfile(pPacketListModel->stringList().at(index.row()));
+    if (selectedfile.open(QIODevice::ReadOnly))
+    {
+        QString fileInfo;
+        qint16 offset = HeadArr[index.row()*4+1] + HeadArr[index.row()*4+1 + 1]<<8;
+        fileInfo = tr("文件大小: ")+QString::number(selectedfile.size()) +tr("字节")
+                + "\n"
+                + tr("文件索引: ") + QString::number(index.row())
+                + "\n"
+                + tr("偏移量: ") + QString::number(offset);
+        pPacketFileInfoText->setText(fileInfo);
+        qDebug()<<QString::number(HeadArr[index.row()*4+1])+" "+QString::number(index.row()*4+1);
+    }
+}

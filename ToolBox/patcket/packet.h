@@ -36,6 +36,9 @@ public:
     QStringListModel  *pPacketListModel;
     QLabel            *pPacketStatus;
 
+    QByteArray HeadArr;
+    QByteArray HexArr;
+
 public:
 
 
@@ -47,6 +50,7 @@ signals:
 public slots:
     void on_packet_btn_clicked();
     void on_files_load_btn_clicked();
+    void on_file_list_pressed(QModelIndex index);
 };
 
 #endif // PACKET_H
