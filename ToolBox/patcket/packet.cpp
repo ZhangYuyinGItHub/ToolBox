@@ -1,13 +1,16 @@
 #include "packet.h"
 #include <QApplication>
 
+#define FILE_OFFSET_LEN       4//bytes
+#define FILE_SIZE_LEN         4//bytes
+#define FILE_NUM_LEN          1//bytes
 
 Packet::Packet(QWidget *parent) : QWidget(parent)
 {
     if (parent == nullptr)
         parent = this;
 
-    pPacketFileInfoText = new QLabel("File Info");
+    pPacketFileInfoText = new QLabel("");
     pPacketLoadBtn      = new QPushButton("Load Files");
     pPacketBtn          = new QPushButton("Packet");
     pPacketFileListView = new QListView();
@@ -20,6 +23,8 @@ Packet::Packet(QWidget *parent) : QWidget(parent)
     /*文件显示*/
     pPacketFileListView->setModelColumn(2);
     pPacketFileListView->setModel(pPacketListModel);
+    HeadArr.clear();
+    HexArr.clear();
     //设置不可编辑状态
     pPacketFileListView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
@@ -63,7 +68,7 @@ Packet::Packet(QWidget *parent) : QWidget(parent)
     QVBoxLayout* pVLayout01 = new QVBoxLayout();
     pVLayout01->addWidget(pPacketMemView);
     pVLayout01->addWidget(pPacketFileInfoText);
-    pVLayout01->setStretch(0, 3);
+    pVLayout01->setStretch(0, 6);
     pVLayout01->setStretch(1, 1);
 
     /*布局加载按钮和转换按钮*/
@@ -130,9 +135,9 @@ void Packet::on_packet_btn_clicked()
     /*文件的个数*/
     HeadArr.clear();
     HexArr.clear();
-    HeadArr += (fileStrList.size());
-    offset += 1;
-    offset += 4*fileStrList.size();
+    HeadArr += (fileStrList.size());//头部放一个字节
+    offset += FILE_NUM_LEN;
+    offset += (FILE_OFFSET_LEN + FILE_SIZE_LEN) * fileStrList.size();
 
     QListIterator<QString> i(fileStrList);
     while (i.hasNext())
@@ -142,10 +147,14 @@ void Packet::on_packet_btn_clicked()
         {
             /*将文件偏移量写入*/
             HeadArr += offset &0xff;
-            HeadArr += (offset>>8) & 0xff;
+            HeadArr += (offset >> 8) & 0xff;
+            HeadArr += (offset >> 16) & 0xff;
+            HeadArr += (offset >> 24) & 0xff;
             /*将文件大小写入*/
             HeadArr += loadfile.size() & 0xff;
             HeadArr += (loadfile.size()>>8) & 0xff;
+            HeadArr += (loadfile.size()>>16) & 0xff;
+            HeadArr += (loadfile.size()>>24) & 0xff;
 
             /*偏移文件的大小，写入文件的内容*/
             offset += loadfile.size();
@@ -154,6 +163,7 @@ void Packet::on_packet_btn_clicked()
         }
         else
         {
+            //如果文件无效，就将头部信息中的文件个数减少1
             if ( HeadArr[0] > 0)
                 HeadArr[0] = HeadArr[0] - 1;
         }
@@ -162,27 +172,51 @@ void Packet::on_packet_btn_clicked()
     file.write(HeadArr);
     file.write(HexArr);
     file.close();
-
+    quint16 num = HeadArr[0]&0xff;
     QMessageBox::information(NULL, tr("恭喜!恭喜!"), tr("已合成 0x")+
-                             QString::number(HeadArr[0])+tr(" 个文件"),
-            QMessageBox::Ok );
-    pPacketStatus->setText(tr("已合成")+QString::number(HeadArr[0])+tr("个文件."));
+                             QString::number(num)+tr(" 个文件"),
+                             QMessageBox::Ok );
+
+    pPacketStatus->setText(tr("已合成")+QString::number(num)+tr("个文件."));
 }
 
 void Packet::on_file_list_pressed(QModelIndex index)
 {
+    QString fileInfo;
     qDebug() << pPacketListModel->stringList().at(index.row());
     QFile selectedfile(pPacketListModel->stringList().at(index.row()));
     if (selectedfile.open(QIODevice::ReadOnly))
     {
-        QString fileInfo;
-        qint16 offset = HeadArr[index.row()*4+1] + HeadArr[index.row()*4+1 + 1]<<8;
-        fileInfo = tr("文件大小: ")+QString::number(selectedfile.size()) +tr("字节")
-                + "\n"
-                + tr("文件索引: ") + QString::number(index.row())
-                + "\n"
-                + tr("偏移量: ") + QString::number(offset);
+        if (HeadArr.isNull() == false)
+        {
+            quint32 offset = ((HeadArr[index.row()*(FILE_OFFSET_LEN+FILE_SIZE_LEN)+0+1])&0xff)
+                    | ((HeadArr[index.row()*(FILE_OFFSET_LEN+FILE_SIZE_LEN)+1+1]<<8)&0xff00)
+                    | ((HeadArr[index.row()*(FILE_OFFSET_LEN+FILE_SIZE_LEN)+2+1]<<16)&0xff0000)
+                    | ((HeadArr[index.row()*(FILE_OFFSET_LEN+FILE_SIZE_LEN)+3+1]<<24)&0xff000000);
+            fileInfo = tr("文件大小: ")+QString::number(selectedfile.size()) +tr("字节")
+                    + "\n"
+                    + tr("文件索引: ") + QString::number(index.row())
+                    + "\n"
+                    + tr("偏移量: ") + QString::number(offset) + tr("字节");
+        }
+        else
+        {
+            fileInfo = tr("文件大小: ")+QString::number(selectedfile.size()) +tr("字节")
+                    + "\n"
+                    + tr("文件索引: ") + QString::number(index.row())
+                    + "\n"
+                    + tr("偏移量: 未合成");
+        }
         pPacketFileInfoText->setText(fileInfo);
-        qDebug()<<QString::number(HeadArr[index.row()*4+1])+" "+QString::number(index.row()*4+1);
+        //qDebug()<<QString::number(offset);
+    }
+    else
+    {
+        fileInfo = tr("文件大小: unknown")
+                + "\n"
+                + tr("文件索引: unknown")
+                + "\n"
+                + tr("偏移量: unknown");
+        pPacketFileInfoText->setText(fileInfo);
     }
 }

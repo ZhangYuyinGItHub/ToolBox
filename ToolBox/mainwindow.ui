@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>ToolBox</string>
+   <string>ToolBox-v2.0</string>
   </property>
   <property name="windowIcon">
    <iconset resource="src.qrc">
@@ -57,7 +57,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="Text2Hex">
        <property name="styleSheet">
@@ -340,7 +340,7 @@
           <item>
            <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>Tool Box v1.0
+             <string>Tool Box v2.0
 2018-01-01</string>
             </property>
             <property name="alignment">
