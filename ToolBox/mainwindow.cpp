@@ -8,7 +8,8 @@
 #include <QDataStream>
 #include <QByteArrayData>
 #include <QDebug>
-
+#include "./Hex2Txt/hex2txt.h"
+#include "./Txt2Hex/txt2hex.h"
 
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
@@ -23,7 +24,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     pPacket = new Packet(ui->Packet);
 
-    //mPacket.show();
+    //pPacket->show();
+    Hex2Txt* pHex2Tex = new Hex2Txt();
+    ui->tabWidget->insertTab(2, pHex2Tex, "HexToTxt");
+
+    Txt2Hex *pTxt2Hex = new Txt2Hex();
+    ui->tabWidget->insertTab(3, pTxt2Hex, "Txt2Hex");
 }
 
 MainWindow::~MainWindow()
@@ -211,4 +217,6 @@ void MainWindow::on_convertBtn_2_clicked()
     qts<<str;
     ui->saveFileText_2->setPlainText(str);
     savefile2.close();
+    QMessageBox::information(NULL, "Tip", tr("success! "),
+                             QMessageBox::Ok );
 }
