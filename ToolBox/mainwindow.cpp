@@ -30,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     Txt2Hex *pTxt2Hex = new Txt2Hex();
     ui->tabWidget->insertTab(3, pTxt2Hex, "Txt2Hex");
+
+    ui->tabWidget->removeTab(0);
+    ui->tabWidget->removeTab(1);
 }
 
 MainWindow::~MainWindow()

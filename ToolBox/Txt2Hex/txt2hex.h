@@ -2,12 +2,26 @@
 #define TXT2HEX_H
 
 #include <QWidget>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QPlainTextEdit>
 
 class Txt2Hex : public QWidget
 {
     Q_OBJECT
 public:
     explicit Txt2Hex(QWidget *parent = nullptr);
+
+    QPushButton *pLoadBtn;
+    QPushButton *pSaveBtn;
+    QLineEdit   *pLoadPath;
+    QLineEdit   *pSavePath;
+    QPushButton *pConvert;
+    QPlainTextEdit *pTxtEdit;
+    QPlainTextEdit *pHexEdit;
+
+    QByteArray text2Hex_handle(QString input);
+    QString Hex2Text_handle(QByteArray input);
 
 signals:
 
