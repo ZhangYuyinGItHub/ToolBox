@@ -24,19 +24,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
     CRC/JQChecksum.cpp \
-    patcket/packet.cpp \
     Hex2Txt/hex2txt.cpp \
-    Txt2Hex/txt2hex.cpp
+    patcket/packet.cpp \
+    SerialAssit/serialassit.cpp \
+    Txt2Hex/txt2hex.cpp \
+    main.cpp \
+    mainwindow.cpp
 
 HEADERS += \
-        mainwindow.h \
     CRC/JQChecksum.h \
-    patcket/packet.h \
     Hex2Txt/hex2txt.h \
-    Txt2Hex/txt2hex.h
+    patcket/packet.h \
+    SerialAssit/serialassit.h \
+    Txt2Hex/txt2hex.h \
+    mainwindow.h
 
 FORMS += \
         mainwindow.ui
