@@ -10,6 +10,7 @@
 #include <QDebug>
 #include "./Hex2Txt/hex2txt.h"
 #include "./Txt2Hex/txt2hex.h"
+#include "./SerialAssit/serialassit.h"
 
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
@@ -32,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
     Packet * pPacket = new Packet();
     ui->tabWidget->insertTab(2, pPacket, "Packet");
 
+    SerialAssit *pSerialAssit = new SerialAssit();
+    ui->tabWidget->insertTab(3, pSerialAssit, "SerialAssit");
 }
 
 MainWindow::~MainWindow()
