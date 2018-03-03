@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QPlainTextEdit>
 #include <QSerialPort>
+#include "qcustomplot.h"
 
 class SerialAssit : public QWidget
 {
@@ -24,6 +25,9 @@ public:
 
     QPlainTextEdit *pRevTextEdit;
 
+    QCustomPlot *pPlot;
+
+    quint64 gRevDataLen;
 protected:
     //void dragEnterEvent(QDragEnterEvent *event);
 

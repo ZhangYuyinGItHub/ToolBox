@@ -5,9 +5,11 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += widgets printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
      QT += serialport
+
 
 TARGET = ToolBox
 TEMPLATE = app
@@ -31,7 +33,8 @@ SOURCES += \
     SerialAssit/serialassit.cpp \
     Txt2Hex/txt2hex.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    SerialAssit/qcustomplot.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -39,7 +42,8 @@ HEADERS += \
     patcket/packet.h \
     SerialAssit/serialassit.h \
     Txt2Hex/txt2hex.h \
-    mainwindow.h
+    mainwindow.h \
+    SerialAssit/qcustomplot.h
 
 FORMS += \
         mainwindow.ui

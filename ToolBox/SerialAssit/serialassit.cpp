@@ -5,8 +5,10 @@
 #include <QDebug>
 #include <QByteArray>
 
+
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
+    /*1. 串口参数设置*/
     pComNumLabel = new QLabel(tr("端口号："));
     pComNum = new QComboBox();
     pComRefreshBtn = new QPushButton(tr("刷新"));
@@ -38,6 +40,13 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRate->addItem("3000000");
     pComBaudRate->setEditable(true);
 
+    /* 2. 曲线参数设置 */
+    gRevDataLen = 0;
+    pPlot = new QCustomPlot();
+    pPlot->xAxis->setVisible(false);
+    pPlot->yAxis->setVisible(false);
+
+    /* 页面布局设置 */
     QHBoxLayout *pLayout01 = new QHBoxLayout();
     pLayout01->addWidget(pComRefreshBtn);
     pLayout01->addWidget(pComNumLabel);
@@ -49,7 +58,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     QVBoxLayout *pLayout02 = new QVBoxLayout(this);
     //pLayout02->addStretch(1);
-    pLayout02->addWidget(pRevTextEdit);
+    pLayout02->addWidget(pPlot);
     pLayout02->addLayout(pLayout01);
 }
 void SerialAssit::comopen()
@@ -69,29 +78,47 @@ void SerialAssit::comopen()
             pComNum->setEnabled(false);
             pComBaudRate->setEnabled(false);
             pComOpenBtn->setText(tr("关闭串口"));
+            pComRefreshBtn->setEnabled(false);
         }
     }
     else
     {
         pComNum->setEnabled(true);
         pComBaudRate->setEnabled(true);
+        pComRefreshBtn->setEnabled(true);
         pSerialPort->close();
         pComOpenBtn->setText(tr("打开串口"));
     }
 }
 void SerialAssit::comread()
 {
-    qDebug()<<"read ready";
+
     QByteArray buf;
     buf = pSerialPort->readAll();
-    if(!buf.isEmpty())
+
+    //    if(!buf.isEmpty())
+    //    {
+    //        QString str = pRevTextEdit->toPlainText();
+    //        str+=tr(buf);
+    //        pRevTextEdit->clear();
+    //        pRevTextEdit->setPlainText(str);
+    //    }
+    //    buf.clear();
+    pPlot->addGraph();
+    pPlot->graph(0)->setPen(QPen(Qt::red)); // line color blue for first graph
+    pPlot->graph(0)->setBrush(QBrush(QColor(255, 0, 0, 20)));
+
+    for(int i=0;i<buf.length();i++)
     {
-        QString str = pRevTextEdit->toPlainText();
-        str+=tr(buf);
-        pRevTextEdit->clear();
-        pRevTextEdit->setPlainText(str);
+        pPlot->graph(0)->addData(gRevDataLen+i,buf[i]);
+        gRevDataLen++;
     }
-    buf.clear();
+    //pPlot->graph(1)->setData(x, y);
+
+    pPlot->graph(0)->rescaleAxes();
+    pPlot->replot();
+
+    qDebug()<<"gRevDataLen:" + gRevDataLen;
 }
 
 void SerialAssit::comfresh()
@@ -110,6 +137,7 @@ void SerialAssit::comfresh()
     }
     pComNum->addItems(pComList);
     qDebug()<<"QString::number(offset)";
+
 
 }
 
