@@ -4,7 +4,11 @@
 #include <QVBoxLayout>
 #include <QDebug>
 #include <QByteArray>
-
+#include <QFile>
+#include <QAudioFormat>
+#include <QAudioOutput>
+#include <QSound>
+#include <QFileDialog>
 
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
@@ -60,6 +64,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     //pLayout02->addStretch(1);
     pLayout02->addWidget(pPlot);
     pLayout02->addLayout(pLayout01);
+
+
 }
 void SerialAssit::comopen()
 {
@@ -138,6 +144,61 @@ void SerialAssit::comfresh()
     pComNum->addItems(pComList);
     qDebug()<<"QString::number(offset)";
 
+#if 1
+    {//test
+        QFile *inputFile = new QFile();
+        QString fileout = QFileDialog::getOpenFileName(this, tr("选择音频文件"), "","*.pcm;;*.*",0);
+        inputFile->setFileName(fileout);
+        if (false == inputFile->open(QIODevice::ReadOnly))
+        {
+            qDebug()<<"file open failed";
+            return ;
+        }
 
+//        pPlot->addGraph();
+//        pPlot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+//        pPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20)));
+
+//        QByteArray arr;
+//        arr = inputFile->readAll();
+//        for(int i=0;i<inputFile->size();i++)
+//        {
+//            pPlot->graph(0)->addData(i, arr[i]);
+//        }
+
+//        pPlot->graph(0)->rescaleAxes();
+//        pPlot->replot();
+
+        //设置采样格式
+        QAudioFormat audioFormat;
+        //设置采样率
+        audioFormat.setSampleRate(8000);
+        //设置通道数
+        audioFormat.setChannelCount(1);
+        //设置采样大小，一般为8位或16位
+        audioFormat.setSampleSize(16);
+        //        //设置编码方式
+        audioFormat.setCodec("audio/pcm");
+        //        //设置字节序
+        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+        //        //设置样本数据类型
+        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+        QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
+        if (!audio)
+        {
+            qDebug()<<"audio open failed";
+            return;
+        }
+        audio->start(inputFile);
+
+
+    }
+#else
+    QSound *sound = new QSound("login.wav", this); //构建对象
+    sound->play();//播放
+    sound->stop();//停止
+    sound->setLoops(3);//设置循环次数
+#endif
 }
 
