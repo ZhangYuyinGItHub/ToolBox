@@ -8,6 +8,7 @@
 #include <QPlainTextEdit>
 #include <QSerialPort>
 #include "qcustomplot.h"
+#include "serialportthread.h"
 
 class SerialAssit : public QWidget
 {
@@ -16,6 +17,7 @@ public:
     explicit SerialAssit(QWidget *parent = nullptr);
 
     QSerialPort *pSerialPort;
+    SerialPortThread *pSerialPortThread;
     QLabel *pComNumLabel;
     QComboBox *pComNum;
     QLabel *pComBaudRateLabel;
@@ -28,6 +30,8 @@ public:
     QCustomPlot *pPlot;
 
     quint64 gRevDataLen;
+    QByteArray gRevbuf;
+    QByteArray gReminderDataArr;
 protected:
     //void dragEnterEvent(QDragEnterEvent *event);
 

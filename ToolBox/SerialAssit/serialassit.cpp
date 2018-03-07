@@ -9,6 +9,7 @@
 #include <QAudioOutput>
 #include <QSound>
 #include <QFileDialog>
+#include <QThread>
 
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
@@ -25,7 +26,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     connect(pComRefreshBtn,&QPushButton::released,this,comfresh);
     connect(pComOpenBtn,&QPushButton::released,this,comopen);
-    connect(pSerialPort,&QSerialPort::readyRead,this,comread);
+    //connect(pSerialPort,&QSerialPort::readyRead,this,comread);
     /*search for serial port*/
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
@@ -44,6 +45,10 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRate->addItem("3000000");
     pComBaudRate->setEditable(true);
 
+    /*串口线程设置*/
+    //pSerialPortThread = new SerialPortThread(this, pSerialPort);
+
+
     /* 2. 曲线参数设置 */
     gRevDataLen = 0;
     pPlot = new QCustomPlot();
@@ -52,6 +57,10 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pPlot->yAxis->setVisible(true);
     pPlot->yAxis2->setVisible(true);
     pPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    pPlot->addGraph();
+    pPlot->graph(0)->setPen(QPen(Qt::red));
+
+
 
     /* 页面布局设置 */
     QHBoxLayout *pLayout01 = new QHBoxLayout();
@@ -68,27 +77,22 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout02->addWidget(pPlot);
     pLayout02->addLayout(pLayout01);
 
-
+    gReminderDataArr.resize(2);
+    gReminderDataArr[1] = 0x00;
 }
 void SerialAssit::comopen()
 {
     qDebug()<<pComOpenBtn->text();
     if (pComOpenBtn->text() == tr("打开串口"))
     {
-        pSerialPort->setPortName(pComNum->currentText());
-        if (pSerialPort->open(QIODevice::ReadWrite))
-        {
-            pSerialPort->setBaudRate(pComBaudRate->currentText().toInt());
-            pSerialPort->setDataBits(QSerialPort::Data8);
-            pSerialPort->setParity(QSerialPort::NoParity);
-            pSerialPort->setStopBits(QSerialPort::OneStop);
-            pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+        pComNum->setEnabled(false);
+        pComBaudRate->setEnabled(false);
+        pComOpenBtn->setText(tr("关闭串口"));
+        pComRefreshBtn->setEnabled(false);
 
-            pComNum->setEnabled(false);
-            pComBaudRate->setEnabled(false);
-            pComOpenBtn->setText(tr("关闭串口"));
-            pComRefreshBtn->setEnabled(false);
-        }
+        /*开启线程串口通讯*/
+        pSerialPortThread = new SerialPortThread(nullptr, pComNum->currentText(), pComBaudRate->currentText().toInt());
+
     }
     else
     {
@@ -97,7 +101,13 @@ void SerialAssit::comopen()
         pComRefreshBtn->setEnabled(true);
         pSerialPort->close();
         pComOpenBtn->setText(tr("打开串口"));
+
+        /*关闭串口通信线程*/
+        //pSerialPortThread->exitThread(false);
+        pSerialPortThread->exitThread(true);
     }
+
+    qDebug() << "com open "+QString::number((int)QThread::currentThreadId());
 }
 void SerialAssit::comread()
 {
@@ -105,33 +115,40 @@ void SerialAssit::comread()
     QByteArray buf;
     buf = pSerialPort->readAll();
 
-    //    if(!buf.isEmpty())
-    //    {
-    //        QString str = pRevTextEdit->toPlainText();
-    //        str+=tr(buf);
-    //        pRevTextEdit->clear();
-    //        pRevTextEdit->setPlainText(str);
-    //    }
-    //    buf.clear();
-    pPlot->addGraph();
-    pPlot->graph(0)->setPen(QPen(Qt::red)); // line color blue for first graph
-    pPlot->graph(0)->setBrush(QBrush(QColor(255, 0, 0, 20)));
+    gRevbuf.append(buf);
 
-    for(int i=0;i<buf.length();i++)
+    if (buf.isEmpty()||buf.isNull())
+        return;
+
+    //    QFile file("./imagePacketTest.bin");
+    //    file.open( QIODevice::WriteOnly | QIODevice::Append);
+    //    file.write(buf);
+    //    file.close();
+    qDebug() << "read com data "+QString::number((int)QThread::currentThreadId());
+    return ;
+    quint64 len = gRevbuf.length();
+    //pPlot->graph(0)->data().clear();
+
+    for(int i=0; i<len; i += 2)
     {
-        pPlot->graph(0)->addData(gRevDataLen+i,buf[i]);
-        gRevDataLen++;
+        qint32 i0 = 0;
+        i0 = gRevbuf[i+1];
+        i0 = ((i0<<8) | gRevbuf[i]);
+        pPlot->graph(0)->addData(i, i0);
     }
-    //pPlot->graph(1)->setData(x, y);
+
 
     pPlot->graph(0)->rescaleAxes();
     pPlot->replot();
 
-    qDebug()<<"gRevDataLen:" + gRevDataLen;
+    pSerialPort->clear();
+    //qDebug()<<"gRevDataLen:" + QString::number(buf.length());
 }
 
 void SerialAssit::comfresh()
 {
+
+    return;
     pComNum->clear();
     QStringList pComList;// = new QStringList();
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -146,6 +163,25 @@ void SerialAssit::comfresh()
     }
     pComNum->addItems(pComList);
     qDebug()<<"QString::number(offset)";
+
+    pPlot->addGraph();
+    pPlot->graph(0)->setPen(QPen(Qt::red)); // line color blue for first graph
+    pPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20)));
+
+
+    //        quint64 len = gRevbuf.size();
+    //        for(int i=0;i<len;i+=2)
+    //        {
+    //            qint32 i0;
+
+    //            i0 = gRevbuf[i+1];
+    //            i0 = ((i0<<8) | gRevbuf[i]);
+
+    //            pPlot->graph(0)->addData(i, i0);
+    //        }
+
+    //        pPlot->graph(0)->rescaleAxes();
+    //        pPlot->replot();
 
 #if 1
     {//test
@@ -167,55 +203,46 @@ void SerialAssit::comfresh()
         quint64 len = inputFile->size();
         for(int i=0;i<len;i+=2)
         {
-            //QString str;
             qint32 i0;
-            //data0 = (arr[i] + arr[i+1]<<8);
 
             i0 = arr[i+1];
-            i0 = ((i0<<8) + arr[i]);
-            if (i0 & 0x8000)
-                ;//i0 = 0 - i0;
-//            if (i0 > 0)
-//                qDebug()<<"<1--->"+ QString::number(i0) ;
-//            else
-//                qDebug()<<"<-2-->" + QString::number(i0);
-
+            i0 = ((i0<<8) | arr[i]);
             pPlot->graph(0)->addData(i, i0);
         }
 
         pPlot->graph(0)->rescaleAxes();
         pPlot->replot();
 
-        //设置采样格式
-        QAudioFormat audioFormat;
-        //设置采样率
-        audioFormat.setSampleRate(16000);
-        //设置通道数
-        audioFormat.setChannelCount(1);
-        //设置采样大小，一般为8位或16位
-        audioFormat.setSampleSize(16);
-        //        //设置编码方式
-        audioFormat.setCodec("audio/pcm");
-        //        //设置字节序
-        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-        //        //设置样本数据类型
-        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+        //        //设置采样格式
+        //        QAudioFormat audioFormat;
+        //        //设置采样率
+        //        audioFormat.setSampleRate(16000);
+        //        //设置通道数
+        //        audioFormat.setChannelCount(1);
+        //        //设置采样大小，一般为8位或16位
+        //        audioFormat.setSampleSize(16);
+        //        //        //设置编码方式
+        //        audioFormat.setCodec("audio/pcm");
+        //        //        //设置字节序
+        //        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+        //        //        //设置样本数据类型
+        //        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
-        QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
-        if (!audio)
-        {
-            qDebug()<<"audio open failed";
-            return;
-        }
-        audio->start(inputFile);
+        //        QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
+        //        if (!audio)
+        //        {
+        //            qDebug()<<"audio open failed";
+        //            return;
+        //        }
+        //        audio->start(inputFile);
 
 
     }
 #else
-    QSound *sound = new QSound("login.wav", this); //构建对象
-    sound->play();//播放
-    sound->stop();//停止
-    sound->setLoops(3);//设置循环次数
+    //    QSound *sound = new QSound("login.wav", this); //构建对象
+    //    sound->play();//播放
+    //    sound->stop();//停止
+    //    sound->setLoops(3);//设置循环次数
 #endif
 }
 

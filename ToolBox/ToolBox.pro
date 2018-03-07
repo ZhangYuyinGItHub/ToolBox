@@ -35,7 +35,8 @@ SOURCES += \
     Txt2Hex/txt2hex.cpp \
     main.cpp \
     mainwindow.cpp \
-    SerialAssit/qcustomplot.cpp
+    SerialAssit/qcustomplot.cpp \
+    SerialAssit/serialportthread.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -44,7 +45,8 @@ HEADERS += \
     SerialAssit/serialassit.h \
     Txt2Hex/txt2hex.h \
     mainwindow.h \
-    SerialAssit/qcustomplot.h
+    SerialAssit/qcustomplot.h \
+    SerialAssit/serialportthread.h
 
 FORMS += \
         mainwindow.ui
