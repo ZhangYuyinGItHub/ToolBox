@@ -9,6 +9,7 @@
 #include <QSerialPort>
 #include "qcustomplot.h"
 #include "serialportthread.h"
+#include <QByteArray>
 
 class SerialAssit : public QWidget
 {
@@ -24,6 +25,8 @@ public:
     QComboBox *pComBaudRate;
     QPushButton *pComRefreshBtn;
     QPushButton *pComOpenBtn;
+    QPushButton *pAudioPlay;
+    QPushButton *pAudioSave;
 
     QPlainTextEdit *pRevTextEdit;
 
@@ -41,6 +44,10 @@ public slots:
     void comfresh(void);
     void comopen(void);
     void comread(void);
+    void audioplay(void);
+    void audiosave(void);
+
+    void serialDataRev(QByteArray data);
 };
 
 #endif // SERIALASSIT_H

@@ -2,34 +2,22 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QString>
+#include "serialassit.h"
 
-SerialPortThread::SerialPortThread(QObject *parent, QString comnum, qint32 baudrate):
+SerialPortThread::SerialPortThread(QObject *parent):
     QObject(parent)
 {
     this->pSerialPort = new QSerialPort();
 
     pThread = new QThread();
     this->moveToThread(pThread);
-    connect(this->pSerialPort,&QSerialPort::readyRead,this,comread,Qt::QueuedConnection);
-    pThread->start();
+    connect(this->pSerialPort,&QSerialPort::readyRead,
+            this,comread,Qt::QueuedConnection);
+    //pThread->start();
 
-    this->pSerialPort->setPortName(comnum);
-    if (this->pSerialPort->open(QIODevice::ReadWrite))
-    {
-        this->pSerialPort->setBaudRate(baudrate);
-        this->pSerialPort->setDataBits(QSerialPort::Data8);
-        this->pSerialPort->setParity(QSerialPort::NoParity);
-        this->pSerialPort->setStopBits(QSerialPort::OneStop);
-        this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
-        qDebug()<< "pSerialPort open success!!!";
-    }
-    else
-    {
-        qDebug()<< "pSerialPort open failed!!!";
-        gThreadSwitch = false;
-    }
+//    connect(this, &SerialPortThread::serialDataReady,
+//            parent, &SerialAssit::serialDataRev, Qt::QueuedConnection);
 
-    gThreadSwitch = true;
     if (pSerialPort == nullptr)
     {
         qDebug()<< "main pSerialPort is null!!!";
@@ -40,10 +28,29 @@ SerialPortThread::SerialPortThread(QObject *parent, QString comnum, qint32 baudr
     }
 }
 
+void SerialPortThread::restartThread(void)
+{
+   pThread->start();
+   this->pSerialPort->setPortName(gComNum);
+   if (this->pSerialPort->open(QIODevice::ReadWrite))
+   {
+       this->pSerialPort->setBaudRate(gComBaudRate);
+       this->pSerialPort->setDataBits(QSerialPort::Data8);
+       this->pSerialPort->setParity(QSerialPort::NoParity);
+       this->pSerialPort->setStopBits(QSerialPort::OneStop);
+       this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+       qDebug()<< "pSerialPort open success!!!";
+   }
+   else
+   {
+       qDebug()<< "pSerialPort open failed!!!";
+   }
+}
 void SerialPortThread::exitThread(bool sw)
 {
     pThread->quit();
     pThread->wait();
+    pSerialPort->close();
 }
 void SerialPortThread::run()
 {
@@ -90,8 +97,10 @@ void SerialPortThread::comread()
     QByteArray arr;
     arr = pSerialPort->readAll();
 
-    qDebug()<< "pSerialPort  receive data!!!" +
-               QString::number((int)QThread::currentThreadId())+ " len:"+ QString::number(arr.length()); ;
+//    qDebug()<< "pSerialPort  receive data!!!" +
+//               QString::number((int)QThread::currentThreadId())+
+//               " len:"+ QString::number(arr.length()); ;
+    emit serialDataReady(arr);
 }
 void SerialPortThread::setComNum(QString str)
 {

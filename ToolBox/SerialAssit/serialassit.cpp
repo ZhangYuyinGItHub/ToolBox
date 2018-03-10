@@ -10,6 +10,7 @@
 #include <QSound>
 #include <QFileDialog>
 #include <QThread>
+#include "serialportthread.h"
 
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
@@ -21,11 +22,15 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRateLabel = new QLabel(tr("波特率："));
     pComBaudRate = new QComboBox();
     pRevTextEdit = new QPlainTextEdit();
+    pAudioPlay = new QPushButton(tr("播放语音"));
+    pAudioSave = new QPushButton(tr("保存语音"));
 
     pSerialPort = new QSerialPort();
 
     connect(pComRefreshBtn,&QPushButton::released,this,comfresh);
     connect(pComOpenBtn,&QPushButton::released,this,comopen);
+    connect(pAudioPlay,&QPushButton::released,this,audioplay);
+    connect(pAudioSave,&QPushButton::released,this,audiosave);
     //connect(pSerialPort,&QSerialPort::readyRead,this,comread);
     /*search for serial port*/
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -47,7 +52,10 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     /*串口线程设置*/
     //pSerialPortThread = new SerialPortThread(this, pSerialPort);
-
+    /*开启线程串口通讯*/
+    pSerialPortThread = new SerialPortThread(nullptr);
+    connect(pSerialPortThread, &SerialPortThread::serialDataReady,
+            this, &SerialAssit::serialDataRev);
 
     /* 2. 曲线参数设置 */
     gRevDataLen = 0;
@@ -70,6 +78,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout01->addWidget(pComBaudRateLabel);
     pLayout01->addWidget(pComBaudRate);
     pLayout01->addWidget(pComOpenBtn);
+    pLayout01->addWidget(pAudioPlay);
+    pLayout01->addWidget(pAudioSave);
     pLayout01->addStretch(1);
 
     QVBoxLayout *pLayout02 = new QVBoxLayout(this);
@@ -79,6 +89,58 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     gReminderDataArr.resize(2);
     gReminderDataArr[1] = 0x00;
+}
+void SerialAssit::audioplay()
+{
+    QString fileout = "./AudioFile.pcm";
+    QFile *inputFile = new QFile(fileout);
+
+    inputFile->setFileName(fileout);
+    if (false == inputFile->open(QIODevice::ReadOnly))
+    {
+        return ;
+    }
+    //设置采样格式
+    QAudioFormat audioFormat;
+    //设置采样率
+    audioFormat.setSampleRate(16000);
+    //设置通道数
+    audioFormat.setChannelCount(1);
+    //设置采样大小，一般为8位或16位
+    audioFormat.setSampleSize(16);
+    //设置编码方式
+    audioFormat.setCodec("audio/pcm");
+    //设置字节序
+    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    //设置样本数据类型
+    audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+    QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
+    if (!audio)
+    {
+        return;
+    }
+    audio->start(inputFile);
+
+    //inputFile->close();//打开之后无法播放语音
+}
+void SerialAssit::audiosave()
+{
+    if (gRevDataLen == 0)
+        return;
+
+    QString fileout = "./AudioFile.pcm";
+    QFile *inputFile = new QFile(fileout);
+    //QString fileout = QFileDialog::getOpenFileName(this, tr("选择音频文件"), "","*.pcm;;*.*",0);
+
+    inputFile->setFileName(fileout);
+    if (false == inputFile->open(QIODevice::WriteOnly))
+    {
+        return ;
+    }
+    inputFile->write(gRevbuf);
+    inputFile->close();
+
 }
 void SerialAssit::comopen()
 {
@@ -90,9 +152,15 @@ void SerialAssit::comopen()
         pComOpenBtn->setText(tr("关闭串口"));
         pComRefreshBtn->setEnabled(false);
 
-        /*开启线程串口通讯*/
-        pSerialPortThread = new SerialPortThread(nullptr, pComNum->currentText(), pComBaudRate->currentText().toInt());
+        pSerialPortThread->setBaudRate(pComBaudRate->currentText().toInt());
+        pSerialPortThread->setComNum(pComNum->currentText());
+        pSerialPortThread->restartThread();
 
+        gRevDataLen = 0;
+        gRevbuf.clear();
+        pPlot->graph(0)->data().data()->clear();
+        pPlot->graph(0)->rescaleAxes();
+        pPlot->replot();
     }
     else
     {
@@ -105,6 +173,16 @@ void SerialAssit::comopen()
         /*关闭串口通信线程*/
         //pSerialPortThread->exitThread(false);
         pSerialPortThread->exitThread(true);
+        if (pSerialPortThread == nullptr)
+        {
+            qDebug() << "pSerialPortThread is null";
+
+        }
+        else
+        {
+            qDebug() << "pSerialPortThread is exit";
+
+        }
     }
 
     qDebug() << "com open "+QString::number((int)QThread::currentThreadId());
@@ -147,8 +225,14 @@ void SerialAssit::comread()
 
 void SerialAssit::comfresh()
 {
+    qDebug()<<"[main] receive data from thread."
+              + QString::number(gRevDataLen) + "data:"+
+              QString::number(pPlot->graph(0)->data().data()->size());
 
-    return;
+    //    pPlot->graph(0)->data().data()->clear();
+    //    pPlot->graph(0)->rescaleAxes();
+    //    pPlot->replot();
+   return ;
     pComNum->clear();
     QStringList pComList;// = new QStringList();
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -162,26 +246,7 @@ void SerialAssit::comfresh()
         }
     }
     pComNum->addItems(pComList);
-    qDebug()<<"QString::number(offset)";
 
-    pPlot->addGraph();
-    pPlot->graph(0)->setPen(QPen(Qt::red)); // line color blue for first graph
-    pPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20)));
-
-
-    //        quint64 len = gRevbuf.size();
-    //        for(int i=0;i<len;i+=2)
-    //        {
-    //            qint32 i0;
-
-    //            i0 = gRevbuf[i+1];
-    //            i0 = ((i0<<8) | gRevbuf[i]);
-
-    //            pPlot->graph(0)->addData(i, i0);
-    //        }
-
-    //        pPlot->graph(0)->rescaleAxes();
-    //        pPlot->replot();
 
 #if 1
     {//test
@@ -194,48 +259,44 @@ void SerialAssit::comfresh()
             return ;
         }
 
-        pPlot->addGraph();
-        pPlot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
-        pPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20)));
-
-        QByteArray arr;
-        arr = inputFile->readAll();
-        quint64 len = inputFile->size();
-        for(int i=0;i<len;i+=2)
-        {
-            qint32 i0;
-
-            i0 = arr[i+1];
-            i0 = ((i0<<8) | arr[i]);
-            pPlot->graph(0)->addData(i, i0);
-        }
-
-        pPlot->graph(0)->rescaleAxes();
-        pPlot->replot();
-
-        //        //设置采样格式
-        //        QAudioFormat audioFormat;
-        //        //设置采样率
-        //        audioFormat.setSampleRate(16000);
-        //        //设置通道数
-        //        audioFormat.setChannelCount(1);
-        //        //设置采样大小，一般为8位或16位
-        //        audioFormat.setSampleSize(16);
-        //        //        //设置编码方式
-        //        audioFormat.setCodec("audio/pcm");
-        //        //        //设置字节序
-        //        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-        //        //        //设置样本数据类型
-        //        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
-
-        //        QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
-        //        if (!audio)
+        //        QByteArray arr;
+        //        arr = inputFile->readAll();
+        //        quint64 len = inputFile->size();
+        //        for(int i=0;i<len;i+=2)
         //        {
-        //            qDebug()<<"audio open failed";
-        //            return;
-        //        }
-        //        audio->start(inputFile);
+        //            qint32 i0;
 
+        //            i0 = arr[i+1];
+        //            i0 = ((i0<<8) | arr[i]);
+        //            pPlot->graph(0)->addData(i, i0);
+        //        }
+
+        //        pPlot->graph(0)->rescaleAxes();
+        //        pPlot->replot();
+
+        //设置采样格式
+        QAudioFormat audioFormat;
+        //设置采样率
+        audioFormat.setSampleRate(16000);
+        //设置通道数
+        audioFormat.setChannelCount(1);
+        //设置采样大小，一般为8位或16位
+        audioFormat.setSampleSize(16);
+        //        //设置编码方式
+        audioFormat.setCodec("audio/pcm");
+        //        //设置字节序
+        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+        //        //设置样本数据类型
+        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+        QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
+        if (!audio)
+        {
+            qDebug()<<"audio open failed";
+            return;
+        }
+        audio->start(inputFile);
+        //inputFile->close();
 
     }
 #else
@@ -244,5 +305,25 @@ void SerialAssit::comfresh()
     //    sound->stop();//停止
     //    sound->setLoops(3);//设置循环次数
 #endif
+}
+void SerialAssit::serialDataRev(QByteArray data)
+{
+    //qDebug()<<"[main] receive data from thread." + QString::number(data.length());
+
+    gRevbuf.append(data);
+    quint32 len= data.length();
+
+    for(int i=(gRevDataLen-gRevDataLen%2);i<(gRevDataLen + len -2);i+=2)
+    {
+        qint32 i0;
+        i0 = gRevbuf[i+1];
+        i0 = ((i0<<8) | gRevbuf[i]);
+        pPlot->graph(0)->addData(i, i0);
+    }
+
+    pPlot->graph(0)->rescaleAxes();
+    pPlot->replot();
+
+    gRevDataLen = gRevDataLen + len;
 }
 

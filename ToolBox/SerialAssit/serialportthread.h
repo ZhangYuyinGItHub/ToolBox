@@ -7,8 +7,9 @@
 
 class SerialPortThread: public QObject
 {
+    Q_OBJECT
 public:
-    explicit SerialPortThread(QObject *parent, QString comnum, qint32 baudrate);
+    explicit SerialPortThread(QObject *parent);
 
     QSerialPort *pSerialPort;
     bool gThreadSwitch;
@@ -20,6 +21,10 @@ public:
     void exitThread(bool sw);
     void setComNum(QString str);
     void setBaudRate(qint32 baudrate);
+    void restartThread(void);
+
+signals:
+    void serialDataReady(QByteArray data);
 
 public slots:
     void comread();
