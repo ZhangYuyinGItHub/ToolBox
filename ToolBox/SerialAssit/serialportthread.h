@@ -17,7 +17,7 @@ public:
     qint32 gComBaudRate;
     QThread *pThread;
 
-    void run();
+    //void run();
     void exitThread(bool sw);
     void setComNum(QString str);
     void setBaudRate(qint32 baudrate);
@@ -26,8 +26,10 @@ public:
 signals:
     void serialDataReady(QByteArray data);
 
+
 public slots:
     void comread();
+    void serialThreadStarted(void);
 };
 
 #endif // SERIALPORTTHREAD_H

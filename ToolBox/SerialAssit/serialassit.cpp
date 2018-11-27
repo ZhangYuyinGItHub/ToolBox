@@ -57,6 +57,9 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     connect(pSerialPortThread, &SerialPortThread::serialDataReady,
             this, &SerialAssit::serialDataRev);
 
+    qDebug()<< "main:";
+    qDebug()<<QThread::currentThreadId();
+
     /* 2. 曲线参数设置 */
     gRevDataLen = 0;
     pPlot = new QCustomPlot();
@@ -176,12 +179,10 @@ void SerialAssit::comopen()
         if (pSerialPortThread == nullptr)
         {
             qDebug() << "pSerialPortThread is null";
-
         }
         else
         {
             qDebug() << "pSerialPortThread is exit";
-
         }
     }
 
