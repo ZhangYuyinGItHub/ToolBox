@@ -3,15 +3,20 @@
 
 #include <QWidget>
 
+namespace Ui {
+class about;
+}
+
 class about : public QWidget
 {
     Q_OBJECT
+
 public:
-    explicit about(QWidget *parent = nullptr);
+    explicit about(QWidget *parent = 0);
+    ~about();
 
-signals:
-
-public slots:
+private:
+    Ui::about *ui;
 };
 
 #endif // ABOUT_H

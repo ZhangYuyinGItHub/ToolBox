@@ -37,7 +37,8 @@ SOURCES += \
     mainwindow.cpp \
     SerialAssit/qcustomplot.cpp \
     SerialAssit/serialportthread.cpp \
-    about/about.cpp
+    about/about.cpp \
+    voice/sbc.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -48,12 +49,14 @@ HEADERS += \
     mainwindow.h \
     SerialAssit/qcustomplot.h \
     SerialAssit/serialportthread.h \
-    about/about.h
+    about/about.h \
+    voice/sbc.h
 
 FORMS += \
-        mainwindow.ui
+    about/about.ui
 
 RESOURCES += \
     src.qrc
 
 RC_FILE = toolbox.rc
+

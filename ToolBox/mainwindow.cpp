@@ -12,6 +12,7 @@
 #include "./Txt2Hex/txt2hex.h"
 #include "./SerialAssit/serialassit.h"
 #include "./about/about.h"
+#include "./voice/sbc.h"
 
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
@@ -37,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     about *pAbout = new about();
     pTabWidget->insertTab(4, pAbout, "About");
+
+
+    sbc *psbc = new sbc();
+    pTabWidget->insertTab(5, psbc, "Voice");
 
     this->setContentsMargins(10,0,10,10);
     this->setCentralWidget(pTabWidget);
