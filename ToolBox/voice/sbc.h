@@ -11,6 +11,8 @@
 #include "../SerialAssit/qcustomplot.h"
 #include <QByteArray>
 
+#include "voice/sbc_lib.h"
+
 class sbc : public QWidget
 {
     Q_OBJECT
@@ -29,6 +31,8 @@ public:
     QLineEdit   *pSbcOutFilePath;
     QLineEdit   *pPcmInFilePath;
     QPushButton *pPcm2SbcBtn;
+
+    Sbc_lib *psbc;
 
 signals:
 

@@ -130,6 +130,12 @@ void sbc::pcm_file_output(void)
 {
     QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
                              QMessageBox::Ok );
+
+    QString fileout = QFileDialog::getOpenFileName(this, tr("输出PCM文件"), "","*.wav",0);
+    if (!fileout.isNull())
+    {
+        pPcmOutFilePath->setText(fileout);
+    }
 }
 
 void sbc::pcm_2_sbc(void)
@@ -143,9 +149,11 @@ void sbc::sbc_2_pcm(void)
 
     QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
                              QMessageBox::Ok );
-//    char* inputstr = ("AudioRecord.dat");
-//    char* outputstr = ("AudioRecord.wav");
 
-//    voice_sbc(inputstr, outputstr);
+    psbc = new Sbc_lib();
+
+    psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
+                     pPcmOutFilePath->text().toLatin1().data());
+
 
 }

@@ -50,7 +50,8 @@ HEADERS += \
     SerialAssit/qcustomplot.h \
     SerialAssit/serialportthread.h \
     about/about.h \
-    voice/sbc.h
+    voice/sbc.h \
+    voice/sbc_lib.h
 
 FORMS += \
     about/about.ui
@@ -60,3 +61,17 @@ RESOURCES += \
 
 RC_FILE = toolbox.rc
 
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/voice/ -lsbc_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/voice/ -lsbc_libd
+
+INCLUDEPATH += $$PWD/voice
+DEPENDPATH += $$PWD/voice
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/libsbc_lib.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/libsbc_libd.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/sbc_lib.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/sbc_libd.lib
+
+DISTFILES += \
+    voice/libsbc_lib.a
