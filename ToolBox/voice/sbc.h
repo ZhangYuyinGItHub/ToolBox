@@ -34,6 +34,10 @@ public:
 
     Sbc_lib *psbc;
 
+public:
+    void audioplay(QString filepath);
+    void drawAudioPlot(QString filename);
+
 signals:
 
 public slots:

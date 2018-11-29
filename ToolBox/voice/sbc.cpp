@@ -155,5 +155,72 @@ void sbc::sbc_2_pcm(void)
     psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
                      pPcmOutFilePath->text().toLatin1().data());
 
+    drawAudioPlot(pPcmOutFilePath->text());
+    audioplay(pPcmOutFilePath->text());
 
+
+}
+
+void sbc::drawAudioPlot(QString filename)
+{
+    QFile *inputFile = new QFile(filename);
+
+    inputFile->setFileName(filename);
+    if (false == inputFile->open(QIODevice::ReadOnly))
+    {
+        return ;
+    }
+
+
+    QByteArray arr = inputFile->readAll();
+
+//    QVector <double> data;
+//    QVector <double> i;
+    for (int index = 0; index < arr.size(); index = index + 2)
+    {
+        qint32 i0 = 0;
+        i0 = arr[index+1];
+        i0 = ((i0<<8) | arr[index]);
+        pPlot->graph(0)->addData(index/2, i0);
+    }
+
+
+    pPlot->graph(0)->rescaleAxes();
+    pPlot->replot();
+
+    inputFile->close();
+}
+
+void sbc::audioplay(QString filepath)
+{
+    QFile *inputFile = new QFile(filepath);
+
+    inputFile->setFileName(filepath);
+    if (false == inputFile->open(QIODevice::ReadOnly))
+    {
+        return ;
+    }
+    //设置采样格式
+    QAudioFormat audioFormat;
+    //设置采样率
+    audioFormat.setSampleRate(16000);
+    //设置通道数
+    audioFormat.setChannelCount(1);
+    //设置采样大小，一般为8位或16位
+    audioFormat.setSampleSize(16);
+    //设置编码方式
+    audioFormat.setCodec("audio/pcm");
+    //设置字节序
+    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    //设置样本数据类型
+    audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+    QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
+    if (!audio)
+    {
+        return;
+    }
+    audio->start(inputFile);
+
+    //inputFile->close();//打开之后无法播放语音
 }
