@@ -12,6 +12,7 @@
 #include <QByteArray>
 
 #include "voice/sbc_lib.h"
+#include "voice/msbc_lib.h"
 
 class sbc : public QWidget
 {
@@ -33,6 +34,7 @@ public:
     QPushButton *pPcm2SbcBtn;
 
     Sbc_lib *psbc;
+    Msbc_lib *pmsbc;
 
 public:
     void audioplay(QString filepath);

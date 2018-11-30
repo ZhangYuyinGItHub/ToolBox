@@ -51,7 +51,8 @@ HEADERS += \
     SerialAssit/serialportthread.h \
     about/about.h \
     voice/sbc.h \
-    voice/sbc_lib.h
+    voice/sbc_lib.h \
+    voice/msbc_lib.h
 
 FORMS += \
     about/about.ui
@@ -74,4 +75,16 @@ else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/vo
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/sbc_libd.lib
 
 DISTFILES += \
-    voice/libsbc_lib.a
+    voice/libsbc_lib.a \
+    voice/libmsbc_lib.a
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/voice/ -lmsbc_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/voice/ -lmsbc_libd
+
+INCLUDEPATH += $$PWD/voice
+DEPENDPATH += $$PWD/voice
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/libmsbc_lib.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/libmsbc_libd.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/msbc_lib.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/msbc_libd.lib

@@ -128,8 +128,8 @@ void sbc::pcm_file_load(void)
 }
 void sbc::pcm_file_output(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
+//                             QMessageBox::Ok );
 
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出PCM文件"), "","*.wav",0);
     if (!fileout.isNull())
@@ -140,15 +140,22 @@ void sbc::pcm_file_output(void)
 
 void sbc::pcm_2_sbc(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
+//                             QMessageBox::Ok );
+
+    pmsbc = new Msbc_lib();
+    pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
+                        pPcmOutFilePath->text().toLatin1().data());
+
+    drawAudioPlot(pPcmOutFilePath->text());
+    audioplay(pPcmOutFilePath->text());
 }
 
 void sbc::sbc_2_pcm(void)
 {
 
-    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
+//                             QMessageBox::Ok );
 
     psbc = new Sbc_lib();
 
