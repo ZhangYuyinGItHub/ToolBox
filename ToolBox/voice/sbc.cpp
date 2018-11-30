@@ -5,7 +5,6 @@
 #include <QByteArray>
 #include <QFile>
 #include <QAudioFormat>
-#include <QAudioOutput>
 #include <QSound>
 #include <QFileDialog>
 #include <QGroupBox>
@@ -103,14 +102,39 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
     pLayout02->addWidget(pSbc2PcmGroup, 0);
     pLayout02->addWidget(pPcm2SbcGroup, 0);
 
-    psbc = new Sbc_lib();
-    pmsbc = new Msbc_lib();
+    /*编码对象创建*/
+    {
+        psbc = new Sbc_lib();
+        pmsbc = new Msbc_lib();
+    }
+
+    /*audio 设置*/
+    {
+        pAudioInputFile = new QFile();
+
+        //设置采样格式
+        QAudioFormat audioFormat;
+        //设置采样率
+        audioFormat.setSampleRate(16000);
+        //设置通道数
+        audioFormat.setChannelCount(1);
+        //设置采样大小，一般为8位或16位
+        audioFormat.setSampleSize(16);
+        //设置编码方式
+        audioFormat.setCodec("audio/pcm");
+        //设置字节序
+        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+        //设置样本数据类型
+        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+        audio = new QAudioOutput( audioFormat, 0);
+    }
 }
 
 void sbc::sbc_file_load(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
+//                             QMessageBox::Ok );
 
     QString fileout = QFileDialog::getOpenFileName(this, tr("加载SBC文件"), "","*.dat",0);
     if (!fileout.isNull())
@@ -131,8 +155,8 @@ void sbc::pcm_file_load(void)
 }
 void sbc::pcm_file_output(void)
 {
-//    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
+    //                             QMessageBox::Ok );
 
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出PCM文件"), "","*.wav",0);
     if (!fileout.isNull())
@@ -143,8 +167,8 @@ void sbc::pcm_file_output(void)
 
 void sbc::pcm_2_sbc(void)
 {
-//    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
+    //                             QMessageBox::Ok );
 
     pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
                         pPcmOutFilePath->text().toLatin1().data());
@@ -156,10 +180,11 @@ void sbc::pcm_2_sbc(void)
 void sbc::sbc_2_pcm(void)
 {
 
-//    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
+    //                             QMessageBox::Ok );
 
 
+    //存在内存泄露
     psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
                      pPcmOutFilePath->text().toLatin1().data());
 
@@ -204,35 +229,14 @@ void sbc::drawAudioPlot(QString filename)
 }
 
 void sbc::audioplay(QString filepath)
-{
-    QFile *inputFile = new QFile(filepath);
-
-    inputFile->setFileName(filepath);
-    if (false == inputFile->open(QIODevice::ReadOnly))
+{    
+    pAudioInputFile->setFileName(filepath);
+    if (false == pAudioInputFile->open(QIODevice::ReadOnly))
     {
         return ;
     }
-    //设置采样格式
-    QAudioFormat audioFormat;
-    //设置采样率
-    audioFormat.setSampleRate(16000);
-    //设置通道数
-    audioFormat.setChannelCount(1);
-    //设置采样大小，一般为8位或16位
-    audioFormat.setSampleSize(16);
-    //设置编码方式
-    audioFormat.setCodec("audio/pcm");
-    //设置字节序
-    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-    //设置样本数据类型
-    audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
-    QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
-    if (!audio)
-    {
-        return;
-    }
-    audio->start(inputFile);
+    audio->start(pAudioInputFile);
 
     //inputFile->close();//打开之后无法播放语音
 }

@@ -36,12 +36,12 @@ MainWindow::MainWindow(QWidget *parent) :
     SerialAssit *pSerialAssit = new SerialAssit();
     pTabWidget->insertTab(3, pSerialAssit, "SerialAssit");
 
-    about *pAbout = new about();
-    pTabWidget->insertTab(4, pAbout, "About");
-
-
     sbc *psbc = new sbc();
-    pTabWidget->insertTab(5, psbc, "Voice");
+    pTabWidget->insertTab(4, psbc, "Voice");
+
+    about *pAbout = new about();
+    pTabWidget->insertTab(5, pAbout, "About");
+
 
     this->setContentsMargins(10,0,10,10);
     this->setCentralWidget(pTabWidget);

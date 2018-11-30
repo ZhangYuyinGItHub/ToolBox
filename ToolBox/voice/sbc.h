@@ -10,6 +10,7 @@
 #include <QLineEdit>
 #include "../SerialAssit/qcustomplot.h"
 #include <QByteArray>
+#include <QAudioOutput>
 
 #include "voice/sbc_lib.h"
 #include "voice/msbc_lib.h"
@@ -35,6 +36,8 @@ public:
 
     Sbc_lib *psbc;
     Msbc_lib *pmsbc;
+    QFile *pAudioInputFile;
+    QAudioOutput *audio;
 
 public:
     void audioplay(QString filepath);
@@ -51,6 +54,7 @@ public slots:
 
     void pcm_2_sbc(void);
     void sbc_2_pcm(void);
+
 };
 
 #endif // SBC_H
