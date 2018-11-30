@@ -102,6 +102,9 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
     pLayout02->addWidget(pPlot, 1);
     pLayout02->addWidget(pSbc2PcmGroup, 0);
     pLayout02->addWidget(pPcm2SbcGroup, 0);
+
+    psbc = new Sbc_lib();
+    pmsbc = new Msbc_lib();
 }
 
 void sbc::sbc_file_load(void)
@@ -143,7 +146,6 @@ void sbc::pcm_2_sbc(void)
 //    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
 //                             QMessageBox::Ok );
 
-    pmsbc = new Msbc_lib();
     pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
                         pPcmOutFilePath->text().toLatin1().data());
 
@@ -157,7 +159,6 @@ void sbc::sbc_2_pcm(void)
 //    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
 //                             QMessageBox::Ok );
 
-    psbc = new Sbc_lib();
 
     psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
                      pPcmOutFilePath->text().toLatin1().data());
@@ -170,6 +171,7 @@ void sbc::sbc_2_pcm(void)
 
 void sbc::drawAudioPlot(QString filename)
 {
+    /*1. 获取文件数据*/
     QFile *inputFile = new QFile(filename);
 
     inputFile->setFileName(filename);
@@ -178,11 +180,14 @@ void sbc::drawAudioPlot(QString filename)
         return ;
     }
 
-
     QByteArray arr = inputFile->readAll();
 
-//    QVector <double> data;
-//    QVector <double> i;
+    /*2. 画图*/
+
+    //不添加一下两行的话，时间会比较久
+    pPlot->removeGraph(0);
+    pPlot->addGraph(0);
+
     for (int index = 0; index < arr.size(); index = index + 2)
     {
         qint32 i0 = 0;
@@ -191,10 +196,10 @@ void sbc::drawAudioPlot(QString filename)
         pPlot->graph(0)->addData(index/2, i0);
     }
 
-
     pPlot->graph(0)->rescaleAxes();
     pPlot->replot();
 
+    /*3. 关闭文件*/
     inputFile->close();
 }
 
