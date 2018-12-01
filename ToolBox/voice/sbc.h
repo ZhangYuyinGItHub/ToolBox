@@ -6,11 +6,13 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QPlainTextEdit>
+#include <QGroupBox>
 #include <QSerialPort>
 #include <QLineEdit>
 #include "../SerialAssit/qcustomplot.h"
 #include <QByteArray>
 #include <QAudioOutput>
+#include <QContextMenuEvent>
 
 #include "voice/sbc_lib.h"
 #include "voice/msbc_lib.h"
@@ -34,10 +36,18 @@ public:
     QLineEdit   *pPcmInFilePath;
     QPushButton *pPcm2SbcBtn;
 
+    QGroupBox *pSbc2PcmGroup;
+    QGroupBox *pPcm2SbcGroup;
+
+    quint8  mAudioCodecMode;
+
     Sbc_lib *psbc;
     Msbc_lib *pmsbc;
     QFile *pAudioInputFile;
     QAudioOutput *audio;
+
+protected:
+    void contextMenuEvent(QContextMenuEvent *event);
 
 public:
     void audioplay(QString filepath);
@@ -53,7 +63,7 @@ public slots:
     void pcm_file_output(void);
 
     void pcm_2_sbc(void);
-    void sbc_2_pcm(void);
+    void codec_2_pcm(void);
 
 };
 

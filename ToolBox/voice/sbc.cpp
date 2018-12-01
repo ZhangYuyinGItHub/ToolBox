@@ -7,11 +7,12 @@
 #include <QAudioFormat>
 #include <QSound>
 #include <QFileDialog>
-#include <QGroupBox>
 #include <QMessageBox>
 
 sbc::sbc(QWidget *parent) : QWidget(parent)
 {
+    mAudioCodecMode = 0;
+
     /* 1. 曲线参数设置 */
     pPlot = new QCustomPlot();
     pPlot->xAxis->setVisible(true);
@@ -23,14 +24,14 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
     pPlot->graph(0)->setPen(QPen(Qt::red));
 
     /*SBC --> PCM*/
-    QGroupBox *pSbc2PcmGroup = new QGroupBox("SBC-->PCM");
+    pSbc2PcmGroup = new QGroupBox("SBC --> PCM");
     {
         QVBoxLayout *pVLayout = new QVBoxLayout();
         QHBoxLayout *pHLayout01 = new QHBoxLayout();
         QHBoxLayout *pHLayout02 = new QHBoxLayout();
 
         pSbcFileLoadBtn = new QPushButton("load sbc");
-        pPcmFileOutBtn = new QPushButton("output file");
+        pPcmFileOutBtn = new QPushButton("output pcm");
 
         pSbcInFilePath = new QLineEdit();
         pPcmOutFilePath = new QLineEdit();
@@ -55,18 +56,18 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
 
         connect(pSbcFileLoadBtn, &QPushButton::released, this, &sbc::sbc_file_load);
         connect(pPcmFileOutBtn, &QPushButton::released, this, &sbc::pcm_file_output);
-        connect(pSbc2PcmBtn, &QPushButton::released, this, &sbc::sbc_2_pcm);
+        connect(pSbc2PcmBtn, &QPushButton::released, this, &sbc::codec_2_pcm);
     }
 
     /*PCM --> SBC 页面设置*/
-    QGroupBox *pPcm2SbcGroup = new QGroupBox("PCM-->SBC");
+    pPcm2SbcGroup = new QGroupBox("PCM --> SBC");
     {
         QVBoxLayout *pVLayout = new QVBoxLayout();
         QHBoxLayout *pHLayout01 = new QHBoxLayout();
         QHBoxLayout *pHLayout02 = new QHBoxLayout();
 
         pPcmFileLoadBtn = new QPushButton("load pcm");
-        pSbcFileOutBtn = new QPushButton("output file");
+        pSbcFileOutBtn = new QPushButton("output sbc");
 
         pPcm2SbcBtn = new QPushButton("convert");
         pPcm2SbcBtn->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Minimum);
@@ -133,8 +134,8 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
 
 void sbc::sbc_file_load(void)
 {
-//    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
+    //                             QMessageBox::Ok );
 
     QString fileout = QFileDialog::getOpenFileName(this, tr("加载SBC文件"), "","*.dat",0);
     if (!fileout.isNull())
@@ -167,31 +168,29 @@ void sbc::pcm_file_output(void)
 
 void sbc::pcm_2_sbc(void)
 {
-    //    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
-    //                             QMessageBox::Ok );
-
-    pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
-                        pPcmOutFilePath->text().toLatin1().data());
-
-    drawAudioPlot(pPcmOutFilePath->text());
-    audioplay(pPcmOutFilePath->text());
+    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
+                             QMessageBox::Ok );
 }
 
-void sbc::sbc_2_pcm(void)
+void sbc::codec_2_pcm(void)
 {
 
-    //    QMessageBox::information(NULL, "SBC", tr("sbc_2_pcm--->! "),
+    //    QMessageBox::information(NULL, "SBC", tr("codec_2_pcm--->! "),
     //                             QMessageBox::Ok );
 
-
-    //存在内存泄露
-    psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
-                     pPcmOutFilePath->text().toLatin1().data());
+    if (mAudioCodecMode == 0)
+    {
+        psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
+                         pPcmOutFilePath->text().toLatin1().data());
+    }
+    else if (mAudioCodecMode == 1)
+    {
+        pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
+                            pPcmOutFilePath->text().toLatin1().data());
+    }
 
     drawAudioPlot(pPcmOutFilePath->text());
     audioplay(pPcmOutFilePath->text());
-
-
 }
 
 void sbc::drawAudioPlot(QString filename)
@@ -217,9 +216,8 @@ void sbc::drawAudioPlot(QString filename)
     {
         qint16 i0 = 0;
         i0 = arr[index+1] ;
-        i0 = (((i0<<8) &0xff00)| (arr[index]&0xff));
-
-        printf("arr[%d] = %d\n",index/2, i0);
+        //低字节在放在低八位之前，必须先与上0xff,否则i0高八位在低字节为负数时永远为0xff
+        i0 = (((i0<<8) )| (arr[index]&0xff));
 
         pPlot->graph(0)->addData(index, i0);
     }
@@ -242,4 +240,73 @@ void sbc::audioplay(QString filepath)
     audio->start(pAudioInputFile);
 
     //inputFile->close();//打开之后无法播放语音
+}
+
+/*
+ *\author yuyin
+ *函数简介：模型页--GraphicsView中的右键事件响应函数
+ */
+void sbc::contextMenuEvent(QContextMenuEvent *event)
+{
+    /*
+     *step1--添加右键Action选项
+     */
+    QMenu menu;
+    QIcon ic3(":/new/prefix2/Image/icon3.png");
+    QAction *pSbcDrag,*pMsbcDrag,*pAdpcmDrag;
+
+    pSbcDrag = menu.addAction(QObject::tr("SBC"));
+    pMsbcDrag = menu.addAction(QObject::tr("MSBC"));
+    pAdpcmDrag = menu.addAction(QObject::tr("ADPCM"));
+
+    if (mAudioCodecMode == 0)
+        pSbcDrag->setIcon(ic3);
+    else if (mAudioCodecMode == 1)
+        pMsbcDrag->setIcon(ic3);
+    else if (mAudioCodecMode == 2)
+        pAdpcmDrag->setIcon(ic3);
+
+    /*
+     *step2--事件循环
+     */
+    QAction *selectaction = menu.exec(event->globalPos());//事件循环
+
+    /*
+     *step3--事件处理
+     */
+    if(selectaction == pSbcDrag)
+    {
+        /*转换成SBC编码模式*/
+        mAudioCodecMode = 0;
+
+        pSbc2PcmGroup->setTitle("SBC --> PCM");
+
+        pSbcFileLoadBtn->setText("load sbc");
+        pPcmFileOutBtn->setText("output pcm");
+
+        pPcm2SbcGroup->setTitle("PCM --> SBC");
+
+        pPcmFileLoadBtn->setText("load pcm");
+        pSbcFileOutBtn->setText("output sbc");
+    }
+    else if(selectaction == pMsbcDrag)
+    {
+        /*转换成SBC编码模式*/
+        mAudioCodecMode = 1;
+
+        pSbc2PcmGroup->setTitle("MSBC --> PCM");
+        pSbcFileLoadBtn->setText("load msbc");
+        pPcmFileOutBtn->setText("output pcm");
+
+        pPcm2SbcGroup->setTitle("PCM --> MSBC");
+        pPcmFileLoadBtn->setText("load pcm");
+        pSbcFileOutBtn->setText("output msbc");
+    }
+    else if(selectaction == pAdpcmDrag)
+        qDebug()<< "---adpcm---->";
+
+    //不加此句，自定义QGraphicsItem子类无法接收右键事件
+    QWidget::contextMenuEvent(event);
+
+
 }
