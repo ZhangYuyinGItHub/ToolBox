@@ -215,10 +215,13 @@ void sbc::drawAudioPlot(QString filename)
 
     for (int index = 0; index < arr.size(); index = index + 2)
     {
-        qint32 i0 = 0;
-        i0 = arr[index+1];
-        i0 = ((i0<<8) | arr[index]);
-        pPlot->graph(0)->addData(index/2, i0);
+        qint16 i0 = 0;
+        i0 = arr[index+1] ;
+        i0 = (((i0<<8) &0xff00)| (arr[index]&0xff));
+
+        printf("arr[%d] = %d\n",index/2, i0);
+
+        pPlot->graph(0)->addData(index, i0);
     }
 
     pPlot->graph(0)->rescaleAxes();

@@ -104,6 +104,8 @@ int voice_sbc(char *input, char *output)
 	}
 	
 
+    free(EncodeBuffer);
+    free(DecodeBuffer);
 
 	return 0;
 }
