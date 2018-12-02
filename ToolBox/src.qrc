@@ -1,5 +1,8 @@
 <RCC>
-    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/new/prefix1">
+        <file>Image/rescale_icon.png</file>
+        <file>Image/replay_icon.png</file>
+    </qresource>
     <qresource prefix="/new/prefix2">
         <file>Image/bee.png</file>
         <file>Image/icon1.png</file>

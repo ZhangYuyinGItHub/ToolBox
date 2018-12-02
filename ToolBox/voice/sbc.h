@@ -65,6 +65,7 @@ public slots:
     void pcm_2_sbc(void);
     void codec_2_pcm(void);
 
+    void show_region_context_menu(QMouseEvent*event);
 };
 
 #endif // SBC_H

@@ -19,9 +19,12 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
     pPlot->xAxis2->setVisible(true);
     pPlot->yAxis->setVisible(true);
     pPlot->yAxis2->setVisible(true);
-    pPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    pPlot->setInteractions(/*QCP::iRangeDrag | */QCP::iRangeZoom);
     pPlot->addGraph();
     pPlot->graph(0)->setPen(QPen(Qt::red));
+
+    connect(pPlot, &QCustomPlot::mousePress, this, &sbc::show_region_context_menu);
+
 
     /*SBC --> PCM*/
     pSbc2PcmGroup = new QGroupBox("SBC --> PCM");
@@ -129,6 +132,42 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
         audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
         audio = new QAudioOutput( audioFormat, 0);
+    }
+}
+
+/*
+ * @brief 曲线右键菜单
+*/
+void sbc::show_region_context_menu(QMouseEvent *event)
+{
+    if(event->button()==Qt::RightButton)
+    {
+        QMenu contextMenu(pPlot);
+
+        QAction *pRescale = contextMenu.addAction("RescaleAxes");
+        pRescale->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
+        QAction *pRepaly = contextMenu.addAction("Replay");
+        pRepaly->setIcon(QIcon(":/new/prefix1/Image/replay_icon.png"));
+        contextMenu.addAction("...");
+
+        /*
+         *step2--事件循环
+         */
+        QAction *selectaction = contextMenu.exec(event->globalPos());//事件循环
+
+        if (selectaction == pRescale)
+        {
+            pPlot->graph(0)->rescaleAxes();
+            pPlot->replot();
+        }
+        else if (selectaction == pRepaly)
+        {
+            audioplay(pAudioInputFile->fileName());
+        }
+
+        //contextMenu.exec(QWidget::pos());
+        //不加此句，自定义QGraphicsItem子类无法接收右键事件
+        //QWidget::contextMenuEvent(event);
     }
 }
 
