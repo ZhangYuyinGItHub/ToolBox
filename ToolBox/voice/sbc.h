@@ -57,7 +57,7 @@ signals:
 
 public slots:
     void sbc_file_load(void);
-    void sbc_file_output(void);
+    void coded_file_output(void);
 
     void pcm_file_load(void);
     void pcm_file_output(void);

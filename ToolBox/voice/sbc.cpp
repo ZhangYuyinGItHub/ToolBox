@@ -95,7 +95,7 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
 
         /*消息设置*/
         connect(pPcmFileLoadBtn, &QPushButton::released, this, &sbc::pcm_file_load);
-        connect(pSbcFileOutBtn, &QPushButton::released, this, &sbc::sbc_file_output);
+        connect(pSbcFileOutBtn, &QPushButton::released, this, &sbc::coded_file_output);
         connect(pPcm2SbcBtn, &QPushButton::released, this, &sbc::pcm_2_sbc);
     }
 
@@ -183,22 +183,32 @@ void sbc::sbc_file_load(void)
     }
 }
 
-void sbc::sbc_file_output(void)
+void sbc::coded_file_output(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("sbc_file_output! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("coded_file_output! "),
+//                             QMessageBox::Ok );
+    QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.dat",0);
+    if (!fileout.isNull())
+    {
+        pSbcOutFilePath->setText(fileout);
+    }
 }
 void sbc::pcm_file_load(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
-                             QMessageBox::Ok );
+//    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
+//                             QMessageBox::Ok );
+    QString fileout = QFileDialog::getOpenFileName(this, tr("加载文件"), "","*.pcm",0);
+    if (!fileout.isNull())
+    {
+        pPcmInFilePath->setText(fileout);
+    }
 }
 void sbc::pcm_file_output(void)
 {
     //    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
     //                             QMessageBox::Ok );
 
-    QString fileout = QFileDialog::getOpenFileName(this, tr("输出PCM文件"), "","*.wav",0);
+    QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.wav;;*.pcm",0);
     if (!fileout.isNull())
     {
         pPcmOutFilePath->setText(fileout);
@@ -207,8 +217,25 @@ void sbc::pcm_file_output(void)
 
 void sbc::pcm_2_sbc(void)
 {
-    QMessageBox::information(NULL, "SBC", tr("pcm_2_sbc! "),
-                             QMessageBox::Ok );
+    if ((pPcmInFilePath->text() == "")||(pPcmInFilePath == NULL))
+        return;
+
+    if ((pSbcOutFilePath->text() == QString(""))||(pSbcOutFilePath == NULL))
+        return;
+
+    if (mAudioCodecMode == 0)
+    {
+        psbc->sbc_encode(pPcmInFilePath->text().toLatin1().data(),
+                         pSbcOutFilePath->text().toLatin1().data());
+    }
+    else if (mAudioCodecMode == 1)
+    {
+//        pmsbc->msbc_encoder(pSbcInFilePath->text().toLatin1().data(),
+//                            pPcmOutFilePath->text().toLatin1().data());
+    }
+
+    QMessageBox::information(NULL, "SBC", tr("coded file success! "),
+                                     QMessageBox::Ok );
 }
 
 void sbc::codec_2_pcm(void)
@@ -217,9 +244,15 @@ void sbc::codec_2_pcm(void)
     //    QMessageBox::information(NULL, "SBC", tr("codec_2_pcm--->! "),
     //                             QMessageBox::Ok );
 
+    if ((pPcmOutFilePath->text() == "")||(pPcmOutFilePath == NULL))
+        return;
+
+    if ((pSbcInFilePath->text() == QString(""))||(pSbcInFilePath == NULL))
+        return;
+
     if (mAudioCodecMode == 0)
     {
-        psbc->sbc_encode(pSbcInFilePath->text().toLatin1().data(),
+        psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
                          pPcmOutFilePath->text().toLatin1().data());
     }
     else if (mAudioCodecMode == 1)
