@@ -6,12 +6,12 @@ Sbc_lib::Sbc_lib()
 {
 }
 
-void Sbc_lib::sbc_encode(char *in, char *out)
+int Sbc_lib::sbc_encode(char *in, char *out)
 {
-    voice_sbc_encoder(in, out);
+    return voice_sbc_encoder(in, out);
 }
 
-void Sbc_lib::sbc_decode(char *in, char *out)
+int Sbc_lib::sbc_decode(char *in, char *out)
 {
-    voice_sbc_decoder(in, out);
+    return voice_sbc_decoder(in, out);
 }
