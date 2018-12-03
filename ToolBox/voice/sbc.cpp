@@ -185,8 +185,8 @@ void sbc::sbc_file_load(void)
 
 void sbc::coded_file_output(void)
 {
-//    QMessageBox::information(NULL, "SBC", tr("coded_file_output! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("coded_file_output! "),
+    //                             QMessageBox::Ok );
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.dat",0);
     if (!fileout.isNull())
     {
@@ -195,8 +195,8 @@ void sbc::coded_file_output(void)
 }
 void sbc::pcm_file_load(void)
 {
-//    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
-//                             QMessageBox::Ok );
+    //    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
+    //                             QMessageBox::Ok );
     QString fileout = QFileDialog::getOpenFileName(this, tr("加载文件"), "","*.pcm",0);
     if (!fileout.isNull())
     {
@@ -230,30 +230,28 @@ void sbc::pcm_2_sbc(void)
     }
     else if (mAudioCodecMode == 1)
     {
-//        pmsbc->msbc_encoder(pSbcInFilePath->text().toLatin1().data(),
-//                            pPcmOutFilePath->text().toLatin1().data());
+        //        pmsbc->msbc_encoder(pSbcInFilePath->text().toLatin1().data(),
+        //                            pPcmOutFilePath->text().toLatin1().data());
     }
 
     QMessageBox::information(NULL, "SBC", tr("coded file success! "),
-                                     QMessageBox::Ok );
+                             QMessageBox::Ok );
 }
 
 void sbc::codec_2_pcm(void)
-{
-
-    //    QMessageBox::information(NULL, "SBC", tr("codec_2_pcm--->! "),
-    //                             QMessageBox::Ok );
+{    
+    int ret = 0;
 
     if ((pPcmOutFilePath->text() == "")||(pPcmOutFilePath == NULL))
-        return;
+        return ;
 
     if ((pSbcInFilePath->text() == QString(""))||(pSbcInFilePath == NULL))
-        return;
+        return ;
 
     if (mAudioCodecMode == 0)
     {
-        psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
-                         pPcmOutFilePath->text().toLatin1().data());
+        ret = psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
+                               pPcmOutFilePath->text().toLatin1().data());
     }
     else if (mAudioCodecMode == 1)
     {
@@ -261,8 +259,18 @@ void sbc::codec_2_pcm(void)
                             pPcmOutFilePath->text().toLatin1().data());
     }
 
-    drawAudioPlot(pPcmOutFilePath->text());
-    audioplay(pPcmOutFilePath->text());
+    if ((ret > 7)||(ret == 0))
+    {
+        drawAudioPlot(pPcmOutFilePath->text());
+        audioplay(pPcmOutFilePath->text());
+    }
+    else
+    {
+        QMessageBox::information(NULL, "Error", tr("Decode Failed!"),
+                                 QMessageBox::Ok );
+    }
+
+    //qDebug()<<"result = "<<ret<<"\n";
 }
 
 void sbc::drawAudioPlot(QString filename)
