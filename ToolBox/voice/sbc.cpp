@@ -230,8 +230,8 @@ void sbc::pcm_2_sbc(void)
     }
     else if (mAudioCodecMode == 1)
     {
-        //        pmsbc->msbc_encoder(pSbcInFilePath->text().toLatin1().data(),
-        //                            pPcmOutFilePath->text().toLatin1().data());
+        pmsbc->msbc_encoder(pPcmInFilePath->text().toLatin1().data(),
+                            pSbcOutFilePath->text().toLatin1().data());
     }
 
     QMessageBox::information(NULL, "SBC", tr("coded file success! "),
