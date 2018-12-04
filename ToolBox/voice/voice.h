@@ -17,11 +17,11 @@
 #include "voice/sbc_lib.h"
 #include "voice/msbc_lib.h"
 
-class sbc : public QWidget
+class voice : public QWidget
 {
     Q_OBJECT
 public:
-    explicit sbc(QWidget *parent = nullptr);
+    explicit voice(QWidget *parent = nullptr);
 
     QCustomPlot *pPlot;
     QPushButton *pSbcFileLoadBtn;

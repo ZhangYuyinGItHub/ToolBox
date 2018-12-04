@@ -12,7 +12,7 @@
 #include "./Txt2Hex/txt2hex.h"
 #include "./SerialAssit/serialassit.h"
 #include "./about/about.h"
-#include "./voice/sbc.h"
+#include "./voice/voice.h"
 
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     SerialAssit *pSerialAssit = new SerialAssit();
     pTabWidget->insertTab(3, pSerialAssit, "SerialAssit");
 
-    sbc *psbc = new sbc();
+    voice *psbc = new voice();
     pTabWidget->insertTab(4, psbc, "Voice");
 
     about *pAbout = new about();

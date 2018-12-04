@@ -1,4 +1,4 @@
-#include "sbc.h"
+#include "voice.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDebug>
@@ -9,7 +9,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-sbc::sbc(QWidget *parent) : QWidget(parent)
+voice::voice(QWidget *parent) : QWidget(parent)
 {
     mAudioCodecMode = 0;
 
@@ -23,7 +23,7 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
     pPlot->addGraph();
     pPlot->graph(0)->setPen(QPen(Qt::red));
 
-    connect(pPlot, &QCustomPlot::mousePress, this, &sbc::show_region_context_menu);
+    connect(pPlot, &QCustomPlot::mousePress, this, &voice::show_region_context_menu);
 
 
     /*SBC --> PCM*/
@@ -57,9 +57,9 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
         pHLayout00->addWidget(pSbc2PcmBtn);
         pSbc2PcmGroup->setLayout(pHLayout00);
 
-        connect(pSbcFileLoadBtn, &QPushButton::released, this, &sbc::sbc_file_load);
-        connect(pPcmFileOutBtn, &QPushButton::released, this, &sbc::pcm_file_output);
-        connect(pSbc2PcmBtn, &QPushButton::released, this, &sbc::codec_2_pcm);
+        connect(pSbcFileLoadBtn, &QPushButton::released, this, &voice::sbc_file_load);
+        connect(pPcmFileOutBtn, &QPushButton::released, this, &voice::pcm_file_output);
+        connect(pSbc2PcmBtn, &QPushButton::released, this, &voice::codec_2_pcm);
     }
 
     /*PCM --> SBC 页面设置*/
@@ -94,9 +94,9 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
         pPcm2SbcGroup->setLayout(pHLayout00);
 
         /*消息设置*/
-        connect(pPcmFileLoadBtn, &QPushButton::released, this, &sbc::pcm_file_load);
-        connect(pSbcFileOutBtn, &QPushButton::released, this, &sbc::coded_file_output);
-        connect(pPcm2SbcBtn, &QPushButton::released, this, &sbc::pcm_2_sbc);
+        connect(pPcmFileLoadBtn, &QPushButton::released, this, &voice::pcm_file_load);
+        connect(pSbcFileOutBtn, &QPushButton::released, this, &voice::coded_file_output);
+        connect(pPcm2SbcBtn, &QPushButton::released, this, &voice::pcm_2_sbc);
     }
 
     /* 页面布局设置 */
@@ -138,7 +138,7 @@ sbc::sbc(QWidget *parent) : QWidget(parent)
 /*
  * @brief 曲线右键菜单
 */
-void sbc::show_region_context_menu(QMouseEvent *event)
+void voice::show_region_context_menu(QMouseEvent *event)
 {
     if(event->button()==Qt::RightButton)
     {
@@ -171,7 +171,7 @@ void sbc::show_region_context_menu(QMouseEvent *event)
     }
 }
 
-void sbc::sbc_file_load(void)
+void voice::sbc_file_load(void)
 {
     //    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
     //                             QMessageBox::Ok );
@@ -183,7 +183,7 @@ void sbc::sbc_file_load(void)
     }
 }
 
-void sbc::coded_file_output(void)
+void voice::coded_file_output(void)
 {
     //    QMessageBox::information(NULL, "SBC", tr("coded_file_output! "),
     //                             QMessageBox::Ok );
@@ -193,7 +193,7 @@ void sbc::coded_file_output(void)
         pSbcOutFilePath->setText(fileout);
     }
 }
-void sbc::pcm_file_load(void)
+void voice::pcm_file_load(void)
 {
     //    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
     //                             QMessageBox::Ok );
@@ -203,7 +203,7 @@ void sbc::pcm_file_load(void)
         pPcmInFilePath->setText(fileout);
     }
 }
-void sbc::pcm_file_output(void)
+void voice::pcm_file_output(void)
 {
     //    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
     //                             QMessageBox::Ok );
@@ -215,7 +215,7 @@ void sbc::pcm_file_output(void)
     }
 }
 
-void sbc::pcm_2_sbc(void)
+void voice::pcm_2_sbc(void)
 {
     if ((pPcmInFilePath->text() == "")||(pPcmInFilePath == NULL))
         return;
@@ -238,7 +238,7 @@ void sbc::pcm_2_sbc(void)
                              QMessageBox::Ok );
 }
 
-void sbc::codec_2_pcm(void)
+void voice::codec_2_pcm(void)
 {    
     int ret = 0;
 
@@ -273,7 +273,7 @@ void sbc::codec_2_pcm(void)
     //qDebug()<<"result = "<<ret<<"\n";
 }
 
-void sbc::drawAudioPlot(QString filename)
+void voice::drawAudioPlot(QString filename)
 {
     /*1. 获取文件数据*/
     QFile *inputFile = new QFile(filename);
@@ -309,7 +309,7 @@ void sbc::drawAudioPlot(QString filename)
     inputFile->close();
 }
 
-void sbc::audioplay(QString filepath)
+void voice::audioplay(QString filepath)
 {    
     pAudioInputFile->setFileName(filepath);
     if (false == pAudioInputFile->open(QIODevice::ReadOnly))
@@ -326,7 +326,7 @@ void sbc::audioplay(QString filepath)
  *\author yuyin
  *函数简介：模型页--GraphicsView中的右键事件响应函数
  */
-void sbc::contextMenuEvent(QContextMenuEvent *event)
+void voice::contextMenuEvent(QContextMenuEvent *event)
 {
     /*
      *step1--添加右键Action选项
