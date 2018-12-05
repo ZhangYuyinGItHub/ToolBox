@@ -38,7 +38,8 @@ SOURCES += \
     SerialAssit/qcustomplot.cpp \
     SerialAssit/serialportthread.cpp \
     about/about.cpp \
-    voice/voice.cpp
+    voice/voice.cpp \
+    voice/voice_setting.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -52,7 +53,8 @@ HEADERS += \
     about/about.h \
     voice/sbc_lib.h \
     voice/msbc_lib.h \
-    voice/voice.h
+    voice/voice.h \
+    voice/voice_setting.h
 
 FORMS += \
     about/about.ui

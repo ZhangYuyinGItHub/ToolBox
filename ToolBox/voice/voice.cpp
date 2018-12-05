@@ -9,8 +9,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+
 voice::voice(QWidget *parent) : QWidget(parent)
 {
+    pVSetting = new voice_setting(this);
+
+
     mAudioCodecMode = 0;
 
     /* 1. 曲线参数设置 */
@@ -239,7 +243,7 @@ void voice::pcm_2_sbc(void)
 }
 
 void voice::codec_2_pcm(void)
-{    
+{
     int ret = 0;
 
     if ((pPcmOutFilePath->text() == "")||(pPcmOutFilePath == NULL))
@@ -310,7 +314,7 @@ void voice::drawAudioPlot(QString filename)
 }
 
 void voice::audioplay(QString filepath)
-{    
+{
     pAudioInputFile->setFileName(filepath);
     if (false == pAudioInputFile->open(QIODevice::ReadOnly))
     {
@@ -383,7 +387,11 @@ void voice::contextMenuEvent(QContextMenuEvent *event)
         pSbcFileOutBtn->setText("output msbc");
     }
     else if(selectaction == pAdpcmDrag)
-        qDebug()<< "---adpcm---->";
+    {
+
+        pVSetting->setVisible(true);
+        //qDebug()<< "---adpcm---->"<<pVSetting->getVoiceCodedType();
+    }
 
     //不加此句，自定义QGraphicsItem子类无法接收右键事件
     QWidget::contextMenuEvent(event);

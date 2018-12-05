@@ -17,6 +17,8 @@
 #include "voice/sbc_lib.h"
 #include "voice/msbc_lib.h"
 
+#include "voice_setting.h"
+
 class voice : public QWidget
 {
     Q_OBJECT
@@ -45,6 +47,8 @@ public:
     Msbc_lib *pmsbc;
     QFile *pAudioInputFile;
     QAudioOutput *audio;
+
+    voice_setting *pVSetting;
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
