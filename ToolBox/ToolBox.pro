@@ -54,7 +54,8 @@ HEADERS += \
     voice/sbc_lib.h \
     voice/msbc_lib.h \
     voice/voice.h \
-    voice/voice_setting.h
+    voice/voice_setting.h \
+    voice/adpcm_lib.h
 
 FORMS += \
     about/about.ui
@@ -78,7 +79,8 @@ else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voic
 
 DISTFILES += \
     voice/libsbc_lib.a \
-    voice/libmsbc_lib.a
+    voice/libmsbc_lib.a \
+    voice/libadpcm_lib.a
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/voice/ -lmsbc_lib
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/voice/ -lmsbc_libd
@@ -90,3 +92,14 @@ win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/libmsbc_
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/libmsbc_libd.a
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/msbc_lib.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/msbc_libd.lib
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/voice/ -ladpcm_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/voice/ -ladpcm_libd
+
+INCLUDEPATH += $$PWD/voice
+DEPENDPATH += $$PWD/voice
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/libadpcm_lib.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/libadpcm_libd.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/voice/adpcm_lib.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/voice/adpcm_libd.lib

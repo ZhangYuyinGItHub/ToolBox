@@ -114,6 +114,7 @@ voice::voice(QWidget *parent) : QWidget(parent)
     {
         psbc = new Sbc_lib();
         pmsbc = new Msbc_lib();
+        padpcm = new Adpcm_lib();
     }
 
     /*audio 设置*/
@@ -237,6 +238,11 @@ void voice::pcm_2_sbc(void)
         pmsbc->msbc_encoder(pPcmInFilePath->text().toLatin1().data(),
                             pSbcOutFilePath->text().toLatin1().data());
     }
+    else if (mAudioCodecMode == 2)
+    {
+        padpcm->adpcm_encoder(pPcmInFilePath->text().toLatin1().data(),
+                              pSbcOutFilePath->text().toLatin1().data());
+    }
 
     QMessageBox::information(NULL, "SBC", tr("coded file success! "),
                              QMessageBox::Ok );
@@ -260,6 +266,11 @@ void voice::codec_2_pcm(void)
     else if (mAudioCodecMode == 1)
     {
         pmsbc->msbc_decoder(pSbcInFilePath->text().toLatin1().data(),
+                            pPcmOutFilePath->text().toLatin1().data());
+    }
+    else if (mAudioCodecMode == 2)
+    {
+        padpcm->adpcm_decoder(pSbcInFilePath->text().toLatin1().data(),
                             pPcmOutFilePath->text().toLatin1().data());
     }
 
@@ -388,9 +399,17 @@ void voice::contextMenuEvent(QContextMenuEvent *event)
     }
     else if(selectaction == pAdpcmDrag)
     {
-
-        pVSetting->setVisible(true);
+        //pVSetting->setVisible(true);
         //qDebug()<< "---adpcm---->"<<pVSetting->getVoiceCodedType();
+        mAudioCodecMode = 2;
+
+        pSbc2PcmGroup->setTitle("ADPCM --> PCM");
+        pSbcFileLoadBtn->setText("load adpcm");
+        pPcmFileOutBtn->setText("output pcm");
+
+        pPcm2SbcGroup->setTitle("PCM --> ADPCM");
+        pPcmFileLoadBtn->setText("load pcm");
+        pSbcFileOutBtn->setText("output adpcm");
     }
 
     //不加此句，自定义QGraphicsItem子类无法接收右键事件

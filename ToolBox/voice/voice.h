@@ -16,6 +16,7 @@
 
 #include "voice/sbc_lib.h"
 #include "voice/msbc_lib.h"
+#include "voice/adpcm_lib.h"
 
 #include "voice_setting.h"
 
@@ -45,6 +46,8 @@ public:
 
     Sbc_lib *psbc;
     Msbc_lib *pmsbc;
+    Adpcm_lib *padpcm;
+
     QFile *pAudioInputFile;
     QAudioOutput *audio;
 
