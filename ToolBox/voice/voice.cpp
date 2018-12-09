@@ -371,6 +371,7 @@ void voice::contextMenuEvent(QContextMenuEvent *event)
      */
     if(selectaction == pSbcDrag)
     {
+        pVSetting->show_window(voice_setting::SBC_TYPE_CODEC);
         /*转换成SBC编码模式*/
         mAudioCodecMode = 0;
 
@@ -399,7 +400,7 @@ void voice::contextMenuEvent(QContextMenuEvent *event)
     }
     else if(selectaction == pAdpcmDrag)
     {
-        //pVSetting->setVisible(true);
+        pVSetting->show_window(voice_setting::ADPCM_TYPE_CODEC);
         //qDebug()<< "---adpcm---->"<<pVSetting->getVoiceCodedType();
         mAudioCodecMode = 2;
 

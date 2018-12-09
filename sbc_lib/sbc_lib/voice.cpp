@@ -6,7 +6,6 @@
 #include <string.h>
 //#include "adpcm.h"
 #include "wav.h"
-#include "sbc.h"
 #include "voice.h"
 
 
@@ -43,7 +42,7 @@ int voice_sbc_decoder(char *input, char *output)
     {
         fseek(fpWav,0,SEEK_END);
         dataLength = ftell (fpWav);
-        sample_num = dataLength / 36*128;//30 * 128;
+        sample_num = dataLength / 36 * 128;//30 * 128;
 
         //update wav header info
         hwav->SubChun2Size = sample_num * 2;//16bit
@@ -64,15 +63,6 @@ int voice_sbc_decoder(char *input, char *output)
     }
 
     // decode
-    T_SBC_PARAMS encode_param;
-
-    encode_param.samplingFrequency = SBC_FREQU16000;
-    encode_param.blockNumber = SBC_BLOCKS16;
-    encode_param.channelMode = SBC_MODE_MONO;
-    encode_param.allocMethod = SBC_ALLOCLOUDNESS;
-    encode_param.subbandNumber = SBC_SUBBANDS8;
-    encode_param.bitpool = 14;
-
     DecodeBuffer = (short*)malloc(sizeof(short) * sample_num);
     memset(DecodeBuffer, 0, sizeof(short) * sample_num);
 
@@ -119,7 +109,7 @@ int voice_sbc_decoder(char *input, char *output)
 /**
 *  @brief voice sbc encode
 */
-int voice_sbc_encoder(char *input, char *output)
+int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
 {
     if ((input == NULL) || (input == ""))
         return RET_SRC_FILE_NOT_EXIST;
@@ -160,12 +150,12 @@ int voice_sbc_encoder(char *input, char *output)
     // decode
     T_SBC_PARAMS encode_param;
 
-    encode_param.samplingFrequency = SBC_FREQU16000;
-    encode_param.blockNumber = SBC_BLOCKS16;
-    encode_param.channelMode = SBC_MODE_MONO;
-    encode_param.allocMethod = SBC_ALLOCLOUDNESS;
-    encode_param.subbandNumber = SBC_SUBBANDS8;
-    encode_param.bitpool = 14;
+    p_encode_param->samplingFrequency = SBC_FREQU16000;
+    p_encode_param->blockNumber = SBC_BLOCKS16;
+    p_encode_param->channelMode = SBC_MODE_MONO;
+    p_encode_param->allocMethod = SBC_ALLOCLOUDNESS;
+    p_encode_param->subbandNumber = SBC_SUBBANDS8;
+    p_encode_param->bitpool = 14;
 
     sample_num = dataLength / 256 * 36;//30 * 128;
     EncodeBuffer = (unsigned char*)malloc(sample_num);
@@ -183,7 +173,6 @@ int voice_sbc_encoder(char *input, char *output)
                             &encode_param,
                             (unsigned char *)(EncodeBuffer + index * 36),
                             &out_len);
-        //printf("index = %d, out_len = %d\n", index, out_len);
     }
 
     fpWav = fopen(output,"wb");

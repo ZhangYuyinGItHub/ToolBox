@@ -50,8 +50,6 @@ typedef struct
     unsigned char bitpool;
 } T_SBC_PARAMS;
 
-extern T_SBC_PARAMS sbc_enc_params;
-
 void sbc_init_encoder(void);
 int sbc_encode(unsigned char *p_input_buff, int input_size, T_SBC_PARAMS *p_params,
                unsigned char *p_output_buff, int *p_output_size);
