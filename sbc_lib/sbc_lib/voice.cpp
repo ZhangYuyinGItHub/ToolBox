@@ -169,7 +169,7 @@ int voice_sbc_encoder(char *input, char *output)
 
     sample_num = dataLength / 256 * 36;//30 * 128;
     EncodeBuffer = (unsigned char*)malloc(sample_num);
-    memset(DecodeBuffer, 0, sample_num);
+    memset(EncodeBuffer, 0, sample_num);
 
     /*sbc init*/
     sbc_init_encoder();
