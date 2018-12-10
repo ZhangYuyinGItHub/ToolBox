@@ -11,7 +11,7 @@ int Sbc_lib::sbc_encode(char *in, char *out, void* pParam)
     return voice_sbc_encoder(in, out, (T_SBC_PARAMS *)pParam);
 }
 
-int Sbc_lib::sbc_decode(char *in, char *out)
+int Sbc_lib::sbc_decode(char *in, char *out, void* pParam)
 {
-    return voice_sbc_decoder(in, out);
+    return voice_sbc_decoder(in, out, (T_SBC_PARAMS *)pParam);
 }

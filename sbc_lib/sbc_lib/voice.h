@@ -3,6 +3,8 @@
 
 #include "sbc.h"
 
+#define  VOICE_PCM_FRAME_SIZE    256
+
 typedef enum{
     RET_CODE_SUCCESS = 0,
     RET_SRC_FILE_NOT_EXIST,
@@ -16,6 +18,6 @@ typedef enum{
 }RET_CODE;
 
 extern int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param);
-extern int voice_sbc_decoder(char *input, char *output);
+extern int voice_sbc_decoder(char *input, char *output, T_SBC_PARAMS *p_encode_param);
 
 #endif // VOICE_H

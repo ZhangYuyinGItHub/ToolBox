@@ -9,7 +9,7 @@ public:
     Sbc_lib();
 
     int sbc_encode(char* in, char* out, void *pParam);
-    int sbc_decode(char* in, char* out);
+    int sbc_decode(char* in, char* out, void *pParam);
 };
 
 #endif // SBC_LIB_H

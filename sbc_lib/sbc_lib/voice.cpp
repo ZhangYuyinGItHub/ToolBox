@@ -16,7 +16,7 @@ unsigned char WaveHeader[] = {0x52,0x49,0x46,0x46,0x24,0xa5,0x00,0x00,0x57,0x41,
 /*
  * @brief voice sbc decoder.
  */
-int voice_sbc_decoder(char *input, char *output)
+int voice_sbc_decoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
 {
     if ((input == NULL) || (input == ""))
         return RET_SRC_FILE_NOT_EXIST;
@@ -24,10 +24,14 @@ int voice_sbc_decoder(char *input, char *output)
     if ((output == NULL) || (output == ""))
         return RET_DES_FILE_NOT_EXIST;
 
+    if (p_encode_param == NULL)
+        return RET_PARAM_ERROR;
+
     wav_pcm_header44* hwav = (wav_pcm_header44*)WaveHeader;;//wav file header
 
     int dataLength;//length of encode buffer, half of sample number
     int sample_num;//sample number
+    int frame_size_after_enc = p_encode_param->bitpool * 2 + 8;
 
     unsigned char *EncodeBuffer;
     short *DecodeBuffer;
@@ -42,11 +46,11 @@ int voice_sbc_decoder(char *input, char *output)
     {
         fseek(fpWav,0,SEEK_END);
         dataLength = ftell (fpWav);
-        sample_num = dataLength / 36 * 128;//30 * 128;
+        sample_num = dataLength / frame_size_after_enc * VOICE_PCM_FRAME_SIZE / 2;//30 * 128;
 
         //update wav header info
         hwav->SubChun2Size = sample_num * 2;//16bit
-        hwav->ChunkSize = hwav->SubChun2Size + 36;//这个值在16k时是36
+        hwav->ChunkSize = hwav->SubChun2Size + frame_size_after_enc;//这个值在16k时是36
         hwav->ByteRate = 16000 * 2;//16k * 2
 
         EncodeBuffer = (unsigned char*)malloc(dataLength);
@@ -68,14 +72,14 @@ int voice_sbc_decoder(char *input, char *output)
 
     /*sbc init*/
     sbc_init_decoder();
-    int out_len = 256;
+    int out_len = VOICE_PCM_FRAME_SIZE;
 
-    for (int index = 0; index < dataLength/36; index ++)
+    for (int index = 0; index < dataLength/frame_size_after_enc; index ++)
     {
-        out_len = 256;
-        result = sbc_decode(EncodeBuffer + index*36,
-                            36,
-                            (unsigned char *)(DecodeBuffer + index * 128),
+        out_len = VOICE_PCM_FRAME_SIZE;
+        result = sbc_decode(EncodeBuffer + index*frame_size_after_enc,
+                            frame_size_after_enc,
+                            (unsigned char *)(DecodeBuffer) + index * VOICE_PCM_FRAME_SIZE,
                             &out_len);
     }
 
@@ -122,6 +126,7 @@ int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
 
     int dataLength;//length of encode buffer, half of sample number
     int sample_num;//sample number
+    int frame_size_after_enc = p_encode_param->bitpool * 2 + 8;
 
     int result = RET_CODE_SUCCESS;
 
@@ -160,21 +165,21 @@ int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
     encode_param.subbandNumber       = p_encode_param->subbandNumber     ;
     encode_param.bitpool             = p_encode_param->bitpool           ;
 
-    sample_num = dataLength / 256 * 36;//30 * 128;
+    sample_num = dataLength / VOICE_PCM_FRAME_SIZE * frame_size_after_enc;//30 * 128;
     EncodeBuffer = (unsigned char*)malloc(sample_num);
     memset(EncodeBuffer, 0, sample_num);
 
     /*sbc init*/
     sbc_init_encoder();
-    int out_len = 256;
+    int out_len = VOICE_PCM_FRAME_SIZE;
 
-    for (int index = 0; index < dataLength/256; index ++)
+    for (int index = 0; index < dataLength/VOICE_PCM_FRAME_SIZE; index ++)
     {
-        out_len = 36;
-        result = sbc_encode((unsigned char*)(DecodeBuffer + index*256),
-                            256,
+        out_len = frame_size_after_enc;
+        result = sbc_encode((unsigned char*)(DecodeBuffer + index*VOICE_PCM_FRAME_SIZE),
+                            VOICE_PCM_FRAME_SIZE,
                             &encode_param,
-                            (unsigned char *)(EncodeBuffer + index * 36),
+                            (unsigned char *)(EncodeBuffer + index * frame_size_after_enc),
                             &out_len);
     }
 
