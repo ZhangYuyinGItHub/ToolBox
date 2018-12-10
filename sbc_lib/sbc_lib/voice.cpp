@@ -117,6 +117,9 @@ int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
     if ((output == NULL) || (output == ""))
         return RET_DES_FILE_NOT_EXIST;
 
+    if (p_encode_param == NULL)
+        return RET_PARAM_ERROR;
+
     int dataLength;//length of encode buffer, half of sample number
     int sample_num;//sample number
 
@@ -150,12 +153,12 @@ int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
     // decode
     T_SBC_PARAMS encode_param;
 
-    p_encode_param->samplingFrequency = SBC_FREQU16000;
-    p_encode_param->blockNumber = SBC_BLOCKS16;
-    p_encode_param->channelMode = SBC_MODE_MONO;
-    p_encode_param->allocMethod = SBC_ALLOCLOUDNESS;
-    p_encode_param->subbandNumber = SBC_SUBBANDS8;
-    p_encode_param->bitpool = 14;
+    encode_param.samplingFrequency   = p_encode_param->samplingFrequency ;
+    encode_param.blockNumber         = p_encode_param->blockNumber       ;
+    encode_param.channelMode         = p_encode_param->channelMode       ;
+    encode_param.allocMethod         = p_encode_param->allocMethod       ;
+    encode_param.subbandNumber       = p_encode_param->subbandNumber     ;
+    encode_param.bitpool             = p_encode_param->bitpool           ;
 
     sample_num = dataLength / 256 * 36;//30 * 128;
     EncodeBuffer = (unsigned char*)malloc(sample_num);

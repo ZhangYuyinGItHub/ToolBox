@@ -231,7 +231,8 @@ void voice::pcm_2_sbc(void)
     if (mAudioCodecMode == 0)
     {
         psbc->sbc_encode(pPcmInFilePath->text().toLatin1().data(),
-                         pSbcOutFilePath->text().toLatin1().data());
+                         pSbcOutFilePath->text().toLatin1().data(),
+                         pVSetting->getSbcParam());
     }
     else if (mAudioCodecMode == 1)
     {

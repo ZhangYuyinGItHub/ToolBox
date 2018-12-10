@@ -8,7 +8,7 @@ class Sbc_lib
 public:
     Sbc_lib();
 
-    int sbc_encode(char* in, char* out);
+    int sbc_encode(char* in, char* out, void *pParam);
     int sbc_decode(char* in, char* out);
 };
 

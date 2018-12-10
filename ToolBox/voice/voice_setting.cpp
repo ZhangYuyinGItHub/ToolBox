@@ -6,9 +6,7 @@
 #include <QPushButton>
 #include <QDebug>
 #include <QObject>
-#include <QSpinBox>
 #include <QLabel>
-#include <QComboBox>
 
 voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(parent)
 {
@@ -44,43 +42,43 @@ voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(pare
 
         /*param value*/
         QVBoxLayout *pVLayout02 = new QVBoxLayout();
-        QSpinBox *pSpinBox = new QSpinBox();//1. bitpool
-        pSpinBox->setValue(gSbcParam.bitpool);
-        pSpinBox->setFocusPolicy(Qt::NoFocus);
-        pSpinBox->setRange(1, 255);
+        pBitPoolSpinBox = new QSpinBox();//1. bitpool
+        pBitPoolSpinBox->setValue(gSbcParam.bitpool);
+        pBitPoolSpinBox->setFocusPolicy(Qt::NoFocus);
+        pBitPoolSpinBox->setRange(1, 255);
 
-        QComboBox *pSamFreqCombox = new QComboBox();//2. sample freq
+        pSamFreqCombox = new QComboBox();//2. sample freq
         pSamFreqCombox->addItem("Freq 16K");
         pSamFreqCombox->addItem("Freq 32K");
         pSamFreqCombox->addItem("Freq 44.1K");
         pSamFreqCombox->addItem("Freq 48K");
         pSamFreqCombox->setCurrentIndex(gSbcParam.samplingFrequency);
 
-        QComboBox *pBlockNumCombox = new QComboBox();//3. Block number
+        pBlockNumCombox = new QComboBox();//3. Block number
         pBlockNumCombox->addItem("BLOCKS4");
         pBlockNumCombox->addItem("BLOCKS8");
         pBlockNumCombox->addItem("BLOCKS12");
         pBlockNumCombox->addItem("BLOCKS16");
         pBlockNumCombox->setCurrentIndex(gSbcParam.blockNumber);
 
-        QComboBox *pChanModeCombox = new QComboBox();//4. channel mode
+        pChanModeCombox = new QComboBox();//4. channel mode
         pChanModeCombox->addItem("MONO");
         pChanModeCombox->addItem("DUAL");
         pChanModeCombox->addItem("STEREO");
         pChanModeCombox->addItem("JOINT");
         pChanModeCombox->setCurrentIndex(gSbcParam.channelMode);
 
-        QComboBox *pAllocModeCombox = new QComboBox();//5. alloc mode
+        pAllocModeCombox = new QComboBox();//5. alloc mode
         pAllocModeCombox->addItem("ALLOCLOUDNESS");
         pAllocModeCombox->addItem("ALLOCSNR");
         pAllocModeCombox->setCurrentIndex(gSbcParam.allocMethod);
 
-        QComboBox *pSubBandCombox = new QComboBox();//6. sub band
+        pSubBandCombox = new QComboBox();//6. sub band
         pSubBandCombox->addItem("SUBBANDS4");
         pSubBandCombox->addItem("SUBBANDS8");
         pSubBandCombox->setCurrentIndex(gSbcParam.subbandNumber);
 
-        pVLayout02->addWidget(pSpinBox);
+        pVLayout02->addWidget(pBitPoolSpinBox);
         pVLayout02->addWidget(pSamFreqCombox);
         pVLayout02->addWidget(pBlockNumCombox);
         pVLayout02->addWidget(pChanModeCombox);
@@ -102,7 +100,7 @@ voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(pare
 
         QVBoxLayout *pVLayout01 = new QVBoxLayout();
 
-        QButtonGroup* pAdpcmBtnGroup = new QButtonGroup();
+        pAdpcmBtnGroup = new QButtonGroup();
         QCheckBox *pBox01 = new QCheckBox("ADPCM 16bits to 4bits (IMA)", this);
         QCheckBox *pBox02 = new QCheckBox("ADPCM 16bits to 4bits (OPT)", this);
         QCheckBox *pBox03 = new QCheckBox("ADPCM 16bits to 3bits (OPT 20Bytes)", this);
@@ -116,11 +114,11 @@ voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(pare
 
         pAdpcmGroup->setLayout(pVLayout01);
 
-
         pAdpcmBtnGroup->addButton(pBox01,0);
         pAdpcmBtnGroup->addButton(pBox02,1);
         pAdpcmBtnGroup->addButton(pBox03,2);
         pAdpcmBtnGroup->addButton(pBox04,3);
+        pBox01->setChecked(true);
 
         connect(pAdpcmBtnGroup,
                 static_cast<void(QButtonGroup::*)(int)>(&QButtonGroup::buttonReleased),
@@ -189,6 +187,23 @@ int voice_setting::getVoiceCodedType()
 void voice_setting::voice_config_ok()
 {
     this->setVisible(false);
+
+    if (gVoiceCodecType == SBC_TYPE_CODEC)
+    {
+        gSbcParam.allocMethod = pAllocModeCombox->currentIndex();
+        gSbcParam.bitpool     = pBitPoolSpinBox->value();
+        gSbcParam.blockNumber = pBlockNumCombox->currentIndex();
+        gSbcParam.channelMode = pChanModeCombox->currentIndex();
+        gSbcParam.samplingFrequency = pSamFreqCombox->currentIndex();
+        gSbcParam.subbandNumber = pSubBandCombox->currentIndex();
+
+    }else if (gVoiceCodecType == MSBC_TYPE_CODEC)
+    {
+
+    }else if (gVoiceCodecType == ADPCM_TYPE_CODEC)
+    {
+
+    }
 }
 
 void voice_setting::show_window(codec_type type)
@@ -207,10 +222,14 @@ void voice_setting::show_window(codec_type type)
     {
         pSbcGroup->setVisible(false);
         pAdpcmGroup->setVisible(true);
+
+        //pAdpcmBtnGroup->setId();
     }
+
+    gVoiceCodecType = type;
 }
 
-void voice_setting::getSbcParam()
+void* voice_setting::getSbcParam()
 {
 //    param_in->bitpool = gSbcParam.bitpool;
 //    param_in->allocMethod = gSbcParam.allocMethod;
@@ -218,5 +237,10 @@ void voice_setting::getSbcParam()
 //    param_in->channelMode = gSbcParam.channelMode;
 //    param_in->samplingFrequency = gSbcParam.samplingFrequency;
 //    param_in->subbandNumber = gSbcParam.subbandNumber;
-    //return &gSbcParam;
+    return (void*)&gSbcParam;
+}
+
+int voice_setting::getAdpcmParam()
+{
+    return gAdpcmEncodeType;
 }

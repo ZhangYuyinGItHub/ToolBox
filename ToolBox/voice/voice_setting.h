@@ -5,6 +5,8 @@
 #include <QDialog>
 #include <QButtonGroup>
 #include <QGroupBox>
+#include <QComboBox>
+#include <QSpinBox>
 
 class voice_setting : public QDialog
 {
@@ -25,16 +27,21 @@ private:
         unsigned char bitpool;
     }sbc_param, *p_sbc_param;
 
-    /*sbc param definition*/
+    /*1. sbc param definition*/
     QGroupBox *pSbcGroup;
+    QSpinBox *pBitPoolSpinBox;
+    QComboBox *pSamFreqCombox;
+    QComboBox *pBlockNumCombox;
+    QComboBox *pChanModeCombox;
+    QComboBox *pAllocModeCombox;
+    QComboBox *pSubBandCombox;
 
-    sbc_param gSbcParam;
-
-    /*MSBC param defination*/
+    /*2. MSBC param defination*/
     QGroupBox *pMsbcGroup;
 
-    /*adpcm param*/
+    /*3. adpcm param*/
     QGroupBox *pAdpcmGroup;
+    QButtonGroup* pAdpcmBtnGroup;
     int       gAdpcmEncodeType;
 
 public:
@@ -52,9 +59,12 @@ public:
         ADPCM_TYPE_CODEC,
     }codec_type;
 
+    sbc_param gSbcParam;
+
     int getVoiceCodedType();
     void show_window(codec_type type);
-    void getSbcParam();
+    void *getSbcParam();
+    int getAdpcmParam();
 
 signals:
 
