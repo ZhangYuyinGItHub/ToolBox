@@ -1327,4 +1327,91 @@ int sbc_get_params(unsigned char *pInputBuffer, int inputSize, T_SBC_PARAMS *pPa
     return SBC_SUCCESS;
 }
 
+/*************************** sbc_get_params ********************************/
+/**/
+/************************************************************************/
+int sbc_get_decode_ioparam(unsigned char *pInputBuffer, int inputSize, int *p_oframe_size, int* p_iframe_size)
+{
+    unsigned int c;
+    unsigned char *pIn = pInputBuffer;
+
+	TSBCData SBCData;
+	TSBCData *pSBCData = &SBCData;
+
+    if (inputSize < 3)
+    {
+        return SBC_NOT_ENOUGH_DATA;
+    }
+
+	{
+		/* read header */
+		c = *pIn++;
+		if (c != SBC_SYNCBYTE)
+		{
+			return SBC_NO_SYNCBYTE;
+		}
+
+		c = *pIn++;
+		pSBCData->sampling_frequency = (c >> 6) & 0x03;
+		pSBCData->nrof_blocks = blockNumbers[(c >> 4) & 0x03];
+		pSBCData->channel_mode = (c >> 2) & 0x03;
+		pSBCData->allocation_method = (c >> 1) & 0x01;
+		pSBCData->nrof_subbands = subbandNumbers[(c >> 0) & 0x01];
+		pSBCData->bitpool = *pIn++;
+		pIn++; /* crc  */
+		pSBCData->nrof_channels = pSBCData->channel_mode == SBC_MODE_MONO ? 1 : 2;
+	}
+
+	{
+        int sb, bb;
+        int frameSize = 4;
+        sb = pSBCData->nrof_subbands;
+        bb = pSBCData->nrof_blocks * pSBCData->bitpool;
+
+        switch (pSBCData->channel_mode)
+        {
+        case SBC_MODE_MONO:
+            frameSize += (sb >> 1) + (bb >> 3);
+            /* (bb)>>3 must be rounded towards plus infinity */
+            if (bb & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        case SBC_MODE_DUAL:
+            frameSize += sb + (bb >> 2);
+            break;
+        case SBC_MODE_STEREO:
+            frameSize += sb + (bb >> 3);
+            /* (bb)>>3 must be rounded towards plus infinity */
+            if (bb & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        case SBC_MODE_JOINT:
+            frameSize += sb + ((sb + bb) >> 3);
+            /* (sb + bb)>>3 must be rounded towards plus infinity */
+            if ((sb + bb) & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        }
+
+		*p_iframe_size = frameSize;
+
+    }
+
+    /* check for sufficient output buffer size */
+    {
+        int ns = pSBCData->nrof_channels * pSBCData->nrof_blocks * pSBCData->nrof_subbands;
+		
+		*p_oframe_size = ns*2;
+    }
+	
+
+    return SBC_SUCCESS;
+}
+
 #endif /*F_BT_MPA_A2DP_SINK*/

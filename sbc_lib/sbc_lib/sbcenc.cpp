@@ -1895,4 +1895,66 @@ static void dumpInputBuffer(short *pBuffer, int index)
 }
 #endif
 
+void sbc_get_encode_ioparam(T_SBC_PARAMS *params, int* p_InFrame_Size, int* p_OutFrame_size)
+{
+    TSBCData *pSBCData = &SBCData;
+    int frameSize;
+    TSampleData *pSampleData = &sampleData[0][0];
+
+    /* transfer public params to internal values */
+    pSBCData->sampling_frequency = (unsigned) params->samplingFrequency;
+    pSBCData->nrof_blocks = blockNumbers[params->blockNumber];
+    pSBCData->channel_mode = params->channelMode;
+    pSBCData->nrof_channels = (params->channelMode == SBC_MODE_MONO) ? 1 : 2;
+    pSBCData->allocation_method = params->allocMethod;
+    pSBCData->nrof_subbands = subbandNumbers[params->subbandNumber];
+    pSBCData->bitpool = params->bitpool;
+
+    /* check for sufficient input buffer size */
+    *p_InFrame_Size = pSBCData->nrof_subbands * pSBCData->nrof_channels * (pSBCData->nrof_blocks << 1);
+
+
+    /* check for sufficient output buffer size */
+    {
+        int sb, bb;
+        frameSize = 4;
+        sb = pSBCData->nrof_subbands;
+        bb = pSBCData->nrof_blocks * pSBCData->bitpool;
+
+        switch (pSBCData->channel_mode)
+        {
+        case SBC_MODE_MONO:
+            frameSize += (sb >> 1) + (bb >> 3);
+            /* (bb)>>3 must be rounded towards plus infinity */
+            if (bb & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        case SBC_MODE_DUAL:
+            frameSize += sb + (bb >> 2);
+            break;
+        case SBC_MODE_STEREO:
+            frameSize += sb + (bb >> 3);
+            /* (bb)>>3 must be rounded towards plus infinity */
+            if (bb & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        case SBC_MODE_JOINT:
+            frameSize += sb + ((sb + bb) >> 3);
+            /* (sb + bb)>>3 must be rounded towards plus infinity */
+            if ((sb + bb) & 0x7)
+            {
+                frameSize++;
+            }
+            break;
+        }
+		
+		*p_OutFrame_size =  frameSize;
+    }
+ 
+}
+
 #endif /*F_BT_MPA_A2DP_SOURCE*/

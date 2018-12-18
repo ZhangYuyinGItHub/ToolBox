@@ -50,6 +50,8 @@ typedef struct
     unsigned char bitpool;
 } T_SBC_PARAMS;
 
+extern T_SBC_PARAMS sbc_enc_params;
+
 void sbc_init_encoder(void);
 int sbc_encode(unsigned char *p_input_buff, int input_size, T_SBC_PARAMS *p_params,
                unsigned char *p_output_buff, int *p_output_size);
@@ -59,5 +61,8 @@ int sbc_decode(unsigned char *p_input_buff, int input_size, unsigned char *p_out
                int *p_output_size);
 
 int sbc_get_params(unsigned char *p_input_buff, int input_size, T_SBC_PARAMS *p_params);
+
+int sbc_get_decode_ioparam(unsigned char *pInputBuffer, int inputSize, int *p_oframe_size, int* p_iframe_size);
+void sbc_get_encode_ioparam(T_SBC_PARAMS *params, int* p_InFrame_Size, int* p_OutFrame_size);
 
 #endif

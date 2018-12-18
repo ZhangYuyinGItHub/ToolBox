@@ -1,23 +1,18 @@
-#ifndef VOICE_H
-#define VOICE_H
+#ifndef _VOICE_SBC_H_
+#define _VOICE_SBC_H_
 
 #include "sbc.h"
 
-#define  VOICE_PCM_FRAME_SIZE    256
+typedef enum
+{
+	SBC_DECODE_SUCCESS = 0,
+	SBC_DECODE_SRC_FILE_OPEN_ERROR,
+	SBC_DECODE_DES_FILE_OPEN_ERROR,
+	SBC_ENCODE_SRC_FILE_OPEN_ERROR,
+	SBC_ENCODE_DES_FILE_OPEN_ERROR,
+}ret_Code;
 
-typedef enum{
-    RET_CODE_SUCCESS = 0,
-    RET_SRC_FILE_NOT_EXIST,
-    RET_DES_FILE_NOT_EXIST,
-    RET_SRC_FILE_OPEN_FAILED,
-    RET_DES_FILE_OPEN_FAILED,
-    RET_SRC_BUFFER_MOC_FAILED,
-    RET_DES_BUFFER_MOC_FAILED,
-    RET_PARAM_ERROR,
-    RET_MAX_NUM,
-}RET_CODE;
+int voice_sbc_decode(char *input, char *output);
+int voice_sbc_encode(char *input, char *output, T_SBC_PARAMS *p_Encode_Param);
 
-extern int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param);
-extern int voice_sbc_decoder(char *input, char *output, T_SBC_PARAMS *p_encode_param);
-
-#endif // VOICE_H
+#endif

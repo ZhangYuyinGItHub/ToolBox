@@ -213,7 +213,7 @@ void voice::pcm_file_output(void)
     //    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
     //                             QMessageBox::Ok );
 
-    QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.wav;;*.pcm",0);
+    QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.pcm;;*.wav",0);
     if (!fileout.isNull())
     {
         pPcmOutFilePath->setText(fileout);
@@ -262,8 +262,7 @@ void voice::codec_2_pcm(void)
     if (mAudioCodecMode == 0)
     {
         ret = psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
-                               pPcmOutFilePath->text().toLatin1().data(),
-                               pVSetting->getSbcParam());
+                               pPcmOutFilePath->text().toLatin1().data());
     }
     else if (mAudioCodecMode == 1)
     {
@@ -273,10 +272,10 @@ void voice::codec_2_pcm(void)
     else if (mAudioCodecMode == 2)
     {
         padpcm->adpcm_decoder(pSbcInFilePath->text().toLatin1().data(),
-                            pPcmOutFilePath->text().toLatin1().data());
+                              pPcmOutFilePath->text().toLatin1().data());
     }
 
-    if ((ret > 7)||(ret == 0))
+    if (1)//((ret > 7)||(ret == 0))
     {
         drawAudioPlot(pPcmOutFilePath->text());
         audioplay(pPcmOutFilePath->text());
@@ -302,6 +301,13 @@ void voice::drawAudioPlot(QString filename)
     }
 
     QByteArray arr = inputFile->readAll();
+    if (arr.size() > 200*1024)
+    {
+        QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot!"),
+                                 QMessageBox::Ok );
+        inputFile->close();
+        return;
+    }
 
     /*2. 画图*/
 
@@ -314,7 +320,7 @@ void voice::drawAudioPlot(QString filename)
         qint16 i0 = 0;
         i0 = arr[index+1] ;
         //低字节在放在低八位之前，必须先与上0xff,否则i0高八位在低字节为负数时永远为0xff
-        i0 = (((i0<<8) )| (arr[index]&0xff));
+        i0 = (((i0<<8) )| (arr[index] & 0xff));
 
         pPlot->graph(0)->addData(index, i0);
     }

@@ -4,186 +4,165 @@
 #include "stdio.h"
 #include <stdlib.h> 
 #include <string.h>
-//#include "adpcm.h"
-#include "wav.h"
+
+#include "sbc.h"
 #include "voice.h"
 
 
-unsigned char WaveHeader[] = {0x52,0x49,0x46,0x46,0x24,0xa5,0x00,0x00,0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,
-                              0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x80,0x3e,0x00,0x00,0x00,0x7d,0x00,0x00,
-                              0x02,0x00,0x10,0x00,0x64,0x61,0x74,0x61,0x00,0xa5,0x00,0x00,0x0d,0x0a};
+//void main()
+//{
+//	T_SBC_PARAMS Encode_Param;
+//	Encode_Param.samplingFrequency = SBC_FREQU16000;
+//	Encode_Param.blockNumber = SBC_BLOCKS16;
+//	Encode_Param.channelMode = SBC_MODE_JOINT;
+//	Encode_Param.allocMethod = SBC_ALLOCLOUDNESS;
+//	Encode_Param.subbandNumber = SBC_SUBBANDS8;
+//	Encode_Param.bitpool = 53;
 
-/*
- * @brief voice sbc decoder.
- */
-int voice_sbc_decoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
+//	voice_sbc_encode("audio1.PCM", "audio2.dat", &Encode_Param);
+//	voice_sbc_decode("audio2.dat", "audio3.pcm");
+//}
+
+
+int voice_sbc_decode(char *input, char *output)
 {
-    if ((input == NULL) || (input == ""))
-        return RET_SRC_FILE_NOT_EXIST;
-
-    if ((output == NULL) || (output == ""))
-        return RET_DES_FILE_NOT_EXIST;
-
-    if (p_encode_param == NULL)
-        return RET_PARAM_ERROR;
-
-    wav_pcm_header44* hwav = (wav_pcm_header44*)WaveHeader;;//wav file header
-
+    int ret = SBC_DECODE_SUCCESS;
     int dataLength;//length of encode buffer, half of sample number
-    int sample_num;//sample number
-    int frame_size_after_enc = p_encode_param->bitpool * 2 + 8;
 
     unsigned char *EncodeBuffer;
     short *DecodeBuffer;
 
-    int result = RET_CODE_SUCCESS;
+    FILE *fpSrc = NULL;
+    FILE *fpDes = NULL;
 
-    FILE *fpWav = NULL;//wav file handle
-
-    fpWav = fopen(input, "rb");
-    printf("读取语音信息:\n");
-    if (fpWav)
+    /*0. open src file and des file*/
+    fpSrc = fopen(input, "rb");
+    printf("[Decode] SBC OPen Src File :<%s>\n", input);
+    if (!fpSrc)
     {
-        fseek(fpWav,0,SEEK_END);
-        dataLength = ftell (fpWav);
-        sample_num = dataLength / frame_size_after_enc * VOICE_PCM_FRAME_SIZE / 2;//30 * 128;
-
-        //update wav header info
-        hwav->SubChun2Size = sample_num * 2;//16bit
-        hwav->ChunkSize = hwav->SubChun2Size + frame_size_after_enc;//这个值在16k时是36
-        hwav->ByteRate = 16000 * 2;//16k * 2
-
-        EncodeBuffer = (unsigned char*)malloc(dataLength);
-        memset(EncodeBuffer, 0, dataLength);
-        fseek(fpWav,0,SEEK_SET);
-        fread(EncodeBuffer, 1, dataLength, fpWav);
-        fclose(fpWav);
-        fpWav = NULL;
-    }
-    else
-    {
-        printf("Open wave file  failed!\n");
-        result = RET_SRC_FILE_OPEN_FAILED;
+        printf("[Decode] SBC Open Src File Failed!\n");
+        return SBC_DECODE_SRC_FILE_OPEN_ERROR;
     }
 
-    // decode
-    DecodeBuffer = (short*)malloc(sizeof(short) * sample_num);
-    memset(DecodeBuffer, 0, sizeof(short) * sample_num);
+    fpDes = fopen(output, "wb");
+    printf("[Decode] SBC OPen Des File :<%s>\n", output);
+    if (!fpDes)
+    {
+        printf("[Decode] SBC OPen Des File Failed!");
+        free(fpSrc);
+        return SBC_DECODE_DES_FILE_OPEN_ERROR;
+    }
 
-    /*sbc init*/
+    /* 1. get sbc param*/
+    int out_frame_len = 0;
+    int in_frame_len = 0;
+    unsigned char arr[3] = {0};
+    fseek(fpSrc, 0, SEEK_SET);
+    fread(arr, 1, 3, fpSrc);
+    sbc_get_decode_ioparam(arr, 3, &out_frame_len, &in_frame_len);
+
+    fseek(fpSrc, 0, SEEK_END);
+    dataLength = ftell (fpSrc);
+
+    /*2. apply encode frame buffer*/
+    EncodeBuffer = (unsigned char*)malloc(in_frame_len);
+    memset(EncodeBuffer, 0, in_frame_len);
+
+    DecodeBuffer = (short*)malloc(out_frame_len);
+    memset(DecodeBuffer, 0, out_frame_len);
+
+    /*3. sbc decode init*/
     sbc_init_decoder();
-    int out_len = VOICE_PCM_FRAME_SIZE;
 
-    for (int index = 0; index < dataLength/frame_size_after_enc; index ++)
+    /*4. decode sbc*/
+    int result = 0;
+    for (int index = 0; index < dataLength / in_frame_len; index ++)
     {
-        out_len = VOICE_PCM_FRAME_SIZE;
-        result = sbc_decode(EncodeBuffer + index*frame_size_after_enc,
-                            frame_size_after_enc,
-                            (unsigned char *)(DecodeBuffer) + index * VOICE_PCM_FRAME_SIZE,
-                            &out_len);
+        /*read in frame data*/
+        fseek(fpSrc, in_frame_len * index, SEEK_SET);
+        fread(EncodeBuffer, 1, in_frame_len, fpSrc);
+
+        /*read out frame data*/
+        fseek(fpDes, out_frame_len * index, SEEK_SET);
+        fwrite(DecodeBuffer, 1, out_frame_len, fpDes);
+
+        /*decode*/
+        result = sbc_decode(EncodeBuffer,
+                            in_frame_len,
+                            (unsigned char *)(DecodeBuffer),
+                            &out_frame_len);
     }
 
-    fpWav = fopen(output,"wb");
-    if (fpWav)
-    {
-        //remove("encode.wav");
-        fwrite(hwav,sizeof(wav_pcm_header44), 1,fpWav);
-        fwrite(DecodeBuffer, sizeof(short), sample_num, fpWav);
-        fclose(fpWav);
-    }
-    else
-    {
-        printf("open DecodedAudio error!");
-        result = RET_DES_FILE_OPEN_FAILED;
-    }
-
-
-    if (EncodeBuffer != NULL)
+    /*5. release buffer*/
+    if (fpSrc)
+        fclose(fpSrc);
+    if (fpDes)
+        fclose(fpDes);
+    if (NULL != EncodeBuffer)
         free(EncodeBuffer);
-    else
-        result = RET_SRC_BUFFER_MOC_FAILED;
-    if (DecodeBuffer != NULL)
+    if (NULL != DecodeBuffer)
         free(DecodeBuffer);
-    else
-        result = RET_DES_BUFFER_MOC_FAILED;
 
-    return result;
+    return ret;
 }
 
 /**
-*  @brief voice sbc encode
+*  @brief voice encode api
 */
-int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
+int voice_sbc_encode(char *input, char *output, T_SBC_PARAMS *p_Encode_Param)
 {
-    if ((input == NULL) || (input == ""))
-        return RET_SRC_FILE_NOT_EXIST;
-
-    if ((output == NULL) || (output == ""))
-        return RET_DES_FILE_NOT_EXIST;
-
-    if (p_encode_param == NULL)
-        return RET_PARAM_ERROR;
-
     int dataLength;//length of encode buffer, half of sample number
     int sample_num;//sample number
-    int frame_size_after_enc = p_encode_param->bitpool * 2 + 8;
-
-    int result = RET_CODE_SUCCESS;
 
     unsigned char *EncodeBuffer;
     unsigned char *DecodeBuffer;
 
     FILE *fpWav = NULL;//wav file handle
 
-    fpWav = fopen(input, "rb+");
-    printf("读取语音信息:\n");
-    if (fpWav)
+    /*0. get src file*/
+    fpWav = fopen(input, "rb");
+    printf("[Encode] SBC OPen Src File: <%s>\n", input);
+    if (!fpWav)
     {
-        fseek(fpWav,0,SEEK_END);
-        dataLength = ftell (fpWav);
-
-        DecodeBuffer = (unsigned char *)malloc(dataLength);
-        memset(DecodeBuffer, 0, dataLength);
-        fseek(fpWav,0,SEEK_SET);
-        fread(DecodeBuffer, 1, dataLength, fpWav);
-        fclose(fpWav);
-        fpWav = NULL;
-    }
-    else
-    {
-        printf("Open wave file  failed!\n");
-        result = RET_SRC_FILE_OPEN_FAILED;
+        printf("[Encode] SBC OPen Src file Failed!\n");
+        return SBC_ENCODE_SRC_FILE_OPEN_ERROR;
     }
 
-    // decode
-    T_SBC_PARAMS encode_param;
+    /*1. apply src file buffer*/
+    fseek(fpWav,0,SEEK_END);
+    dataLength = ftell (fpWav);
+    DecodeBuffer = (unsigned char *)malloc(dataLength);
+    memset(DecodeBuffer, 0, dataLength);
+    fseek(fpWav,0,SEEK_SET);
+    fread(DecodeBuffer, 1, dataLength, fpWav);
+    fclose(fpWav);
+    fpWav = NULL;
 
-    encode_param.samplingFrequency   = p_encode_param->samplingFrequency ;
-    encode_param.blockNumber         = p_encode_param->blockNumber       ;
-    encode_param.channelMode         = p_encode_param->channelMode       ;
-    encode_param.allocMethod         = p_encode_param->allocMethod       ;
-    encode_param.subbandNumber       = p_encode_param->subbandNumber     ;
-    encode_param.bitpool             = p_encode_param->bitpool           ;
+    /*2. get sbc encode param*/
+    int in_len = 0;
+    int out_len = 0;
+    sbc_get_encode_ioparam(p_Encode_Param, &in_len, &out_len);
 
-    sample_num = dataLength / VOICE_PCM_FRAME_SIZE * frame_size_after_enc;//30 * 128;
+    /*3. apply encode buffer*/
+    int result;
+    sample_num = dataLength / in_len * out_len;
     EncodeBuffer = (unsigned char*)malloc(sample_num);
     memset(EncodeBuffer, 0, sample_num);
 
-    /*sbc init*/
+    /*4. sbc init and encode*/
     sbc_init_encoder();
-    int out_len = VOICE_PCM_FRAME_SIZE;
-
-    for (int index = 0; index < dataLength/VOICE_PCM_FRAME_SIZE; index ++)
+    for (int index = 0; index < dataLength/in_len; index ++)
     {
-        out_len = frame_size_after_enc;
-        result = sbc_encode((unsigned char*)(DecodeBuffer + index*VOICE_PCM_FRAME_SIZE),
-                            VOICE_PCM_FRAME_SIZE,
-                            &encode_param,
-                            (unsigned char *)(EncodeBuffer + index * frame_size_after_enc),
+        result = sbc_encode((unsigned char*)(DecodeBuffer + index*in_len),
+                            in_len,
+                            p_Encode_Param,
+                            (unsigned char *)(EncodeBuffer + index * out_len),
                             &out_len);
     }
 
+    /*5. open des file*/
     fpWav = fopen(output,"wb");
+    printf("[Encode] SBC OPen Des File: <%s>\n", output);
     if (fpWav)
     {
         fwrite(EncodeBuffer, 1, sample_num, fpWav);
@@ -191,21 +170,15 @@ int voice_sbc_encoder(char *input, char *output, T_SBC_PARAMS *p_encode_param)
     }
     else
     {
-        printf("open DecodedAudio error!");
-        result = RET_DES_FILE_OPEN_FAILED;
+        printf("[Encode] SBC OPen Des File Failed!");
     }
 
-    if (EncodeBuffer != NULL)
+    /*6. release buffer applied*/
+    if (NULL != EncodeBuffer)
         free(EncodeBuffer);
-    else
-        result = RET_DES_BUFFER_MOC_FAILED;
-    if (DecodeBuffer != NULL)
+    if (NULL != DecodeBuffer)
         free(DecodeBuffer);
-    else
-        result = RET_SRC_BUFFER_MOC_FAILED;
 
-    return result;
+    return 0;
 }
-
-
 
