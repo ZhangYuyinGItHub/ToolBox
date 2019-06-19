@@ -22,6 +22,7 @@ public:
     void setComNum(QString str);
     void setBaudRate(qint32 baudrate);
     void restartThread(void);
+    void comwrite(QByteArray arr);
 
 signals:
     void serialDataReady(QByteArray data);

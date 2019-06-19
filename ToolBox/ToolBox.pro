@@ -39,7 +39,8 @@ SOURCES += \
     SerialAssit/serialportthread.cpp \
     about/about.cpp \
     voice/voice.cpp \
-    voice/voice_setting.cpp
+    voice/voice_setting.cpp \
+    SerialAssit/audiodevice.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -55,7 +56,8 @@ HEADERS += \
     voice/msbc_lib.h \
     voice/voice.h \
     voice/voice_setting.h \
-    voice/adpcm_lib.h
+    voice/adpcm_lib.h \
+    SerialAssit/audiodevice.h
 
 FORMS += \
     about/about.ui

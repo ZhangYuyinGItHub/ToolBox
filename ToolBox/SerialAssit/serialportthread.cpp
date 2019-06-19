@@ -40,7 +40,11 @@ void SerialPortThread::serialThreadStarted()
 void SerialPortThread::restartThread(void)
 {
     if (!pThread->isRunning())
+    {
+        qDebug()<< "restart serial thread\r\n";
         pThread->start();
+    }
+
     this->pSerialPort->setPortName(gComNum);
     if (this->pSerialPort->open(QIODevice::ReadWrite))
     {
@@ -58,9 +62,10 @@ void SerialPortThread::restartThread(void)
 }
 void SerialPortThread::exitThread(bool sw)
 {
-    pThread->quit();
-    pThread->wait();
+    //pThread->quit();
+    //pThread->terminate();
     pSerialPort->close();
+    qDebug()<< "pSerialPort thread exit!!!";
 }
 
 
@@ -69,11 +74,22 @@ void SerialPortThread::comread()
     QByteArray arr;
     arr = pSerialPort->readAll();
 
-    //    qDebug()<< "pSerialPort  receive data!!!" +
-    //               QString::number((int)QThread::currentThreadId())+
-    //               " len:"+ QString::number(arr.length()); ;
+    qDebug()<< "thread02:";
+    qDebug()<<QThread::currentThreadId();
+
     emit serialDataReady(arr);
 }
+void SerialPortThread::comwrite(QByteArray arr)
+{
+    if (pSerialPort->isOpen())
+        this->pSerialPort->write(arr);
+    else
+        qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
+
+    qDebug()<< "thread03:";
+    qDebug()<<QThread::currentThreadId();
+}
+
 void SerialPortThread::setComNum(QString str)
 {
     gComNum.clear();
