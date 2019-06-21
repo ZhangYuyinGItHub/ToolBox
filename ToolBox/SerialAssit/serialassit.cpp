@@ -428,11 +428,33 @@ void SerialAssit::comfresh()
  *        语音数据接受槽函数，接受来自串口读取线程的语音数据，并进行绘图
  * @param data 语音数据
  */
-void SerialAssit::serialDataRev(QByteArray data)
+void SerialAssit::serialDataRev(uint64_t length0)
 {
-    qDebug()<<"[main] receive data from thread." + QString::number(gRevbuf.length());
+    //qDebug()<<"[main] receive data from thread." + QString::number(gRevbuf.length());
 
-    gRevbuf.append(data);
+
+    quint64 length = pSerialPortThread->getCurrentRevLength();
+    QByteArray arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
+    for (;length > gRevDataLen; )
+    {
+        for (quint32 index = gRevDataLen; index < length - gRevDataLen; index += 2)
+        {
+            quint16 i0;
+            i0 = arr[index+1];
+            i0 = (i0<<8) | (arr[index]&0xff);
+            pPlot->graph(0)->addData(index/2, i0);
+        }
+
+        length = pSerialPortThread->getCurrentRevLength();
+        arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
+        gRevDataLen += length;
+
+        pPlot->graph(0)->rescaleAxes();
+        pPlot->replot();
+    }
+
+#if 0
+    //gRevbuf.append(data);
 
     quint32 len= data.length();
     len = len - len % 2;
@@ -444,11 +466,10 @@ void SerialAssit::serialDataRev(QByteArray data)
         i0 = ((i0<<8) | (gRevbuf[i]&0xff));
         pPlot->graph(0)->addData(i/2, i0);
     }
-
     pPlot->graph(0)->rescaleAxes();
     pPlot->replot();
 
     gRevDataLen = gRevDataLen + len;
-
+#endif
 }
 

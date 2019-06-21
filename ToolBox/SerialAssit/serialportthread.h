@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QSerialPort>
 #include <QString>
+#include <QByteArray>
 
 class SerialPortThread: public QObject
 {
@@ -16,6 +17,8 @@ public:
     QString gComNum;
     qint32 gComBaudRate;
     QThread *pThread;
+    QByteArray gRevBuffer;
+    quint64 gRevDataLen;
 
     //void run();
     void exitThread(bool sw);
@@ -23,9 +26,11 @@ public:
     void setBaudRate(qint32 baudrate);
     void restartThread(void);
     void comwrite(QByteArray arr);
+    quint64 getCurrentRevLength(void);
+    QByteArray getRevDataArr(int start, int end);
 
 signals:
-    void serialDataReady(QByteArray data);
+    void serialDataReady(uint64_t current_len);
 
 
 public slots:

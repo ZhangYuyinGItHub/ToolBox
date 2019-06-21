@@ -71,7 +71,7 @@ public slots:
     void comsend(void);
     void voice_cmd_handler(void);
 
-    void serialDataRev(QByteArray data);
+    void serialDataRev(uint64_t length0);
 };
 
 #endif // SERIALASSIT_H

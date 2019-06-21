@@ -57,6 +57,9 @@ void SerialPortThread::restartThread(void)
         this->pSerialPort->setStopBits(QSerialPort::OneStop);
         this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
         qDebug()<< "pSerialPort open success!!!";
+
+        gRevDataLen = 0;
+        gRevBuffer.clear();
     }
     else
     {
@@ -78,7 +81,13 @@ void SerialPortThread::comread()
     QByteArray arr;
     arr = pSerialPort->readAll();
 
-    emit serialDataReady(arr);
+//    qDebug()<< "thread03:";
+//    qDebug()<<QThread::currentThreadId();
+
+    gRevBuffer.append(arr);
+    gRevDataLen = gRevDataLen + arr.length();
+
+    emit serialDataReady(gRevDataLen);
 }
 void SerialPortThread::comwrite(QByteArray arr)
 {
@@ -89,6 +98,15 @@ void SerialPortThread::comwrite(QByteArray arr)
 
     //    qDebug()<< "thread03:";
     //    qDebug()<<QThread::currentThreadId();
+}
+
+quint64 SerialPortThread::getCurrentRevLength(void)
+{
+    return gRevDataLen;
+}
+QByteArray SerialPortThread::getRevDataArr(int start, int end)
+{
+    return gRevBuffer.mid(start, end);
 }
 
 void SerialPortThread::setComNum(QString str)
