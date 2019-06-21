@@ -9,21 +9,24 @@ SerialPortThread::SerialPortThread(QObject *parent):
 {
     pThread = new QThread();
     this->moveToThread(pThread);
-    //    connect(this, &SerialPortThread::serialDataReady,
-    //            parent, &SerialAssit::serialDataRev, Qt::QueuedConnection);
+
+    /*
+     * note: 所有使用pThread触发的槽函数都是运行在该线程中；
+     *       serialThreadStarted 运行在thread中，里面运行的函数触发的槽函数(comread())也是运行在该线程中；
+     */
     connect(pThread, &QThread::started, this, &SerialPortThread::serialThreadStarted,
             Qt::QueuedConnection);
 
     pThread->start();
+
 }
 
 void SerialPortThread::serialThreadStarted()
 {
-    this->pSerialPort = new QSerialPort();
-
     if (pSerialPort == nullptr)
     {
         qDebug()<< "main pSerialPort is null!!!";
+        this->pSerialPort = new QSerialPort();
     }
     else
     {
@@ -32,7 +35,7 @@ void SerialPortThread::serialThreadStarted()
 
     //pSerialPort->moveToThread(pThread);
     connect(this->pSerialPort,&QSerialPort::readyRead,
-            this,comread,Qt::QueuedConnection);
+            this, comread, Qt::QueuedConnection);
 
     qDebug()<< "thread01:";
     qDebug()<<QThread::currentThreadId();
@@ -64,6 +67,7 @@ void SerialPortThread::exitThread(bool sw)
 {
     //pThread->quit();
     //pThread->terminate();
+    pSerialPort->clear();
     pSerialPort->close();
     qDebug()<< "pSerialPort thread exit!!!";
 }
@@ -74,9 +78,6 @@ void SerialPortThread::comread()
     QByteArray arr;
     arr = pSerialPort->readAll();
 
-    qDebug()<< "thread02:";
-    qDebug()<<QThread::currentThreadId();
-
     emit serialDataReady(arr);
 }
 void SerialPortThread::comwrite(QByteArray arr)
@@ -86,8 +87,8 @@ void SerialPortThread::comwrite(QByteArray arr)
     else
         qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
 
-    qDebug()<< "thread03:";
-    qDebug()<<QThread::currentThreadId();
+    //    qDebug()<< "thread03:";
+    //    qDebug()<<QThread::currentThreadId();
 }
 
 void SerialPortThread::setComNum(QString str)

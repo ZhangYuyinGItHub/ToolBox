@@ -13,6 +13,8 @@
 #include "serialportthread.h"
 #include "audiodevice.h"
 
+
+
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
     /*1. 串口参数设置*/
@@ -23,25 +25,33 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRateLabel = new QLabel(tr("波特率："));
     pComBaudRate = new QComboBox();
     //pRevTextEdit = new QPlainTextEdit();
+
+
     pSendEdit = new QLineEdit();
     pSendBtn = new QPushButton("指令发送");
     pSendEdit->setPlaceholderText("input uart cmd...");
     QRegExp regExp("[a-fA-F0-9 ]{100}");
     pSendEdit->setValidator(new QRegExpValidator(regExp, this));
     pSendEdit->setValidator(new QRegExpValidator(regExp, this));
-
+    pSendStartVoice = new QPushButton("开始语音");
+    pSendStartVoice->setObjectName(QString::number(VOICE_CMD_START, 10));
+    pSendStopVoice = new QPushButton("停止语音");
+    pSendStopVoice->setObjectName(QString::number(VOICE_CMD_STOP, 10));
+    pSendUart2M  = new QPushButton("2M");
+    pSendUart2M->setObjectName(QString::number(VOICE_CMD_2M, 10));
+    connect(pSendStartVoice, &QPushButton::released, this, voice_cmd_handler);
+    connect(pSendStopVoice, &QPushButton::released, this, voice_cmd_handler);
+    connect(pSendUart2M, &QPushButton::released, this, voice_cmd_handler);
 
     pAudioPlay = new QPushButton(tr("播放语音"));
     pAudioSave = new QPushButton(tr("保存语音"));
-
-    pSerialPort = new QSerialPort();
 
     connect(pComRefreshBtn,&QPushButton::released,this,comfresh);
     connect(pComOpenBtn,&QPushButton::released,this,comopen);
     connect(pAudioPlay,&QPushButton::released,this,audioplay);
     connect(pAudioSave,&QPushButton::released,this,audiosave);
     connect(pSendBtn,&QPushButton::released,this,comsend);
-    //connect(pSerialPort,&QSerialPort::readyRead,this,comread);
+
     /*search for serial port*/
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
     {
@@ -60,14 +70,12 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRate->addItem("3000000");
     pComBaudRate->setEditable(true);
 
-    /*串口线程设置*/
-    //pSerialPortThread = new SerialPortThread(this, pSerialPort);
     /*开启线程串口通讯*/
     pSerialPortThread = new SerialPortThread(nullptr);
     connect(pSerialPortThread, &SerialPortThread::serialDataReady,
             this, &SerialAssit::serialDataRev);
 
-    qDebug()<< "main:";
+    qDebug()<< "main thread id:";
     qDebug()<<QThread::currentThreadId();
 
     /* 2. 曲线参数设置 */
@@ -77,7 +85,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pPlot->xAxis2->setVisible(true);
     pPlot->yAxis->setVisible(true);
     pPlot->yAxis2->setVisible(true);
-    pPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    //pPlot->setInteractions(/*QCP::iRangeDrag |*/ QCP::iRangeZoom);
     pPlot->addGraph();
     pPlot->graph(0)->setPen(QPen(Qt::red));
 
@@ -96,16 +104,48 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     QHBoxLayout *pLayout03 = new QHBoxLayout();
     pLayout03->addWidget(pSendBtn);
     pLayout03->addWidget(pSendEdit);
+    pLayout03->addWidget(pSendStartVoice);
+    pLayout03->addWidget(pSendStopVoice);
+    pLayout03->addWidget(pSendUart2M);
+
 
     QVBoxLayout *pLayout02 = new QVBoxLayout(this);
     //pLayout02->addStretch(1);
     pLayout02->addWidget(pPlot);
     pLayout02->addLayout(pLayout01);
     pLayout02->addLayout(pLayout03);
-
-    gReminderDataArr.resize(2);
-    gReminderDataArr[1] = 0x00;
 }
+void SerialAssit::voice_cmd_handler()
+{
+    QObject *object = QObject::sender();
+    QPushButton *push_button = qobject_cast<QPushButton *>(object);
+    if (push_button)
+    {
+        QString object_name = push_button->objectName();
+        qint32  index = object_name.toInt();
+        QByteArray cmd;
+        switch(index)
+        {
+        case VOICE_CMD_2M:
+            cmd =  QString2Hex(voice_cmd_2M);
+            break;
+        case VOICE_CMD_START:
+            cmd =  QString2Hex(voice_cmd_start);
+            break;
+        case VOICE_CMD_STOP:
+            cmd =  QString2Hex(voice_cmd_stop);
+            break;
+        default:break;
+        }
+
+        pSerialPortThread->comwrite(cmd);
+    }
+}
+
+/**
+ * @brief SerialAssit::audioplay
+ *        播放语音按钮的槽函数
+ */
 void SerialAssit::audioplay()
 {
     QString fileout = "./AudioFile.pcm";
@@ -147,6 +187,10 @@ void SerialAssit::audioplay()
     audio->start(audiodev);
     //inputFile->close();//打开之后无法播放语音
 }
+/**
+ * @brief SerialAssit::audiosave
+ *        保存语音数据
+ */
 void SerialAssit::audiosave()
 {
     if (gRevDataLen == 0)
@@ -165,6 +209,11 @@ void SerialAssit::audiosave()
     inputFile->close();
 
 }
+/**
+ * @brief SerialAssit::comopen
+ *
+ * 打开关闭串口按钮的槽函数
+ */
 void SerialAssit::comopen()
 {
     qDebug()<<pComOpenBtn->text();
@@ -182,8 +231,13 @@ void SerialAssit::comopen()
         gRevDataLen = 0;
         gRevbuf.clear();
         pPlot->graph(0)->data().data()->clear();
+        pPlot->graph(0)->data().clear();//
         pPlot->graph(0)->rescaleAxes();
         pPlot->replot();
+        /*clear buffer data*/
+        pPlot->clearGraphs();
+        pPlot->addGraph();
+        pPlot->graph(0)->setPen(QPen(Qt::red));
     }
     else
     {
@@ -209,44 +263,15 @@ void SerialAssit::comopen()
 
     qDebug() << "com open "+QString::number((int)QThread::currentThreadId());
 }
-void SerialAssit::comread()
-{
-
-    QByteArray buf;
-    buf = pSerialPort->readAll();
-
-    gRevbuf.append(buf);
-
-    if (buf.isEmpty()||buf.isNull())
-        return;
-
-    qDebug() << "read com data "+QString::number((int)QThread::currentThreadId());
-    return ;
-    quint64 len = gRevbuf.length();
-    //pPlot->graph(0)->data().clear();
-
-    for(int i=0; i<len; i += 2)
-    {
-        qint32 i0 = 0;
-        i0 = gRevbuf[i+1];
-        i0 = ((i0<<8) | gRevbuf[i]);
-        pPlot->graph(0)->addData(i, i0);
-    }
-
-    pPlot->graph(0)->rescaleAxes();
-    pPlot->replot();
-
-    pSerialPort->clear();
-    //qDebug()<<"gRevDataLen:" + QString::number(buf.length());
-
-
-}
+/**
+ * @brief SerialAssit::comsend
+ *
+ * 串口指令发送按钮的槽函数
+ */
 void SerialAssit::comsend()
 {
-
     QString str = pSendEdit->text();
     QByteArray arr =  QString2Hex(str);
-
 
     {
         pSerialPortThread->comwrite(arr);
@@ -255,8 +280,10 @@ void SerialAssit::comsend()
 
 }
 
-/*
- * QByteArray convert QString, 中间以 “ ” 空格隔开
+/**
+ * QByteArray convert QString
+ *
+ *    中间以 “ ” 空格隔开
  */
 QString SerialAssit::ByteArrayToHexString(QByteArray &ba)
 {
@@ -272,6 +299,12 @@ QString SerialAssit::ByteArrayToHexString(QByteArray &ba)
     return buf;
 }
 
+/**
+ * @brief SerialAssit::ConvertHexChar
+ *        字符 转 十六进制
+ * @param ch
+ * @return
+ */
 char SerialAssit::ConvertHexChar(char ch)
 {
     if((ch >= '0') && (ch <= '9'))
@@ -283,7 +316,12 @@ char SerialAssit::ConvertHexChar(char ch)
     else return (-1);
 }
 
-
+/**
+ * @brief SerialAssit::QString2Hex
+ *        QString 字符串转 Hex 格式
+ * @param 输入的str
+ * @return Hex
+ */
 QByteArray SerialAssit::QString2Hex(QString str)
 {
     QByteArray senddata;
@@ -318,17 +356,13 @@ QByteArray SerialAssit::QString2Hex(QString str)
     return senddata;
 }
 
-
+/**
+ * @brief SerialAssit::comfresh
+ *        刷新可以使用的串口号
+ */
 void SerialAssit::comfresh()
 {
-    qDebug()<<"[main] receive data from thread."
-              + QString::number(gRevDataLen) + "data:"+
-              QString::number(pPlot->graph(0)->data().data()->size());
 
-    //    pPlot->graph(0)->data().data()->clear();
-    //    pPlot->graph(0)->rescaleAxes();
-    //    pPlot->replot();
-    return ;
     pComNum->clear();
     QStringList pComList;// = new QStringList();
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -343,6 +377,7 @@ void SerialAssit::comfresh()
     }
     pComNum->addItems(pComList);
 
+    return;
 
 #if 1
     {//test
@@ -354,21 +389,6 @@ void SerialAssit::comfresh()
             qDebug()<<"file open failed";
             return ;
         }
-
-        //        QByteArray arr;
-        //        arr = inputFile->readAll();
-        //        quint64 len = inputFile->size();
-        //        for(int i=0;i<len;i+=2)
-        //        {
-        //            qint32 i0;
-
-        //            i0 = arr[i+1];
-        //            i0 = ((i0<<8) | arr[i]);
-        //            pPlot->graph(0)->addData(i, i0);
-        //        }
-
-        //        pPlot->graph(0)->rescaleAxes();
-        //        pPlot->replot();
 
         //设置采样格式
         QAudioFormat audioFormat;
@@ -402,19 +422,27 @@ void SerialAssit::comfresh()
     //    sound->setLoops(3);//设置循环次数
 #endif
 }
+
+/**
+ * @brief SerialAssit::serialDataRev
+ *        语音数据接受槽函数，接受来自串口读取线程的语音数据，并进行绘图
+ * @param data 语音数据
+ */
 void SerialAssit::serialDataRev(QByteArray data)
 {
-    //qDebug()<<"[main] receive data from thread." + QString::number(data.length());
+    qDebug()<<"[main] receive data from thread." + QString::number(gRevbuf.length());
 
     gRevbuf.append(data);
-    quint32 len= data.length();
 
-    for(int i=(gRevDataLen-gRevDataLen%2);i<(gRevDataLen + len -2);i+=2)
+    quint32 len= data.length();
+    len = len - len % 2;
+
+    for(quint32 i = (gRevDataLen - gRevDataLen % 2); i < (gRevDataLen + len -2); i += 2)
     {
         qint16 i0;
         i0 = gRevbuf[i+1];
         i0 = ((i0<<8) | (gRevbuf[i]&0xff));
-        pPlot->graph(0)->addData(i, i0);
+        pPlot->graph(0)->addData(i/2, i0);
     }
 
     pPlot->graph(0)->rescaleAxes();
@@ -422,7 +450,5 @@ void SerialAssit::serialDataRev(QByteArray data)
 
     gRevDataLen = gRevDataLen + len;
 
-    qDebug()<< "thread04:";
-    qDebug()<<QThread::currentThreadId();
 }
 

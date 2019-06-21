@@ -13,6 +13,11 @@
 #include <QFile>
 #include <QLineEdit>
 
+
+const QString voice_cmd_2M = QString("87 10 11 01 E4 E1 ");
+const QString voice_cmd_start = QString("87 05 11 73 75");
+const QString voice_cmd_stop = QString("87 06 11 73 85");
+
 class SerialAssit : public QWidget
 {
     Q_OBJECT
@@ -33,12 +38,21 @@ public:
     QPlainTextEdit *pRevTextEdit;
     QLineEdit *pSendEdit;
     QPushButton *pSendBtn;
+    QPushButton *pSendUart2M;
+    QPushButton *pSendStartVoice;
+    QPushButton *pSendStopVoice;
 
     QCustomPlot *pPlot;
 
     quint64 gRevDataLen;
     QByteArray gRevbuf;
-    QByteArray gReminderDataArr;
+
+    enum
+    {
+        VOICE_CMD_2M,
+        VOICE_CMD_START,
+        VOICE_CMD_STOP,
+    };
 
 public:
     QByteArray QString2Hex(QString str);
@@ -52,10 +66,10 @@ signals:
 public slots:
     void comfresh(void);
     void comopen(void);
-    void comread(void);
     void audioplay(void);
     void audiosave(void);
     void comsend(void);
+    void voice_cmd_handler(void);
 
     void serialDataRev(QByteArray data);
 };
