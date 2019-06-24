@@ -75,19 +75,58 @@ void SerialPortThread::exitThread(bool sw)
     qDebug()<< "pSerialPort thread exit!!!";
 }
 
+QString SerialPortThread::ByteArrayToString(QByteArray &ba)
+{
+    QDataStream out(&ba,QIODevice::ReadWrite);   //将str的数据 读到out里面去
+    QString buf;
+    while(!out.atEnd())
+    {
+        qint8 outChar = 0;
+        out >> outChar;   //每次一个字节的填充到 outchar
+        QString str = QString("%1").arg(outChar&0xFF,2,16,QLatin1Char('0')).toUpper() + QString(" ");   //2 字符宽度
+        buf += str;
+    }
+    return buf;
+}
 
 void SerialPortThread::comread()
 {
     QByteArray arr;
     arr = pSerialPort->readAll();
 
-//    qDebug()<< "thread03:";
-//    qDebug()<<QThread::currentThreadId();
+//        qDebug()<< "thread04:";
+//        qDebug()<<QThread::currentThreadId();
 
+    quint16 length = arr.length();
+    if (length %2)
+    {
+        arr.remove(length, 1);
+        length -= 1;
+
+        qDebug()<< "thread04:";
+        qDebug()<<QThread::currentThreadId();
+    }
+
+    //mux = 0;
     gRevBuffer.append(arr);
-    gRevDataLen = gRevDataLen + arr.length();
+    gRevDataLen = gRevDataLen + length;
+    //mux = 1;
 
-    emit serialDataReady(gRevDataLen);
+//    {
+//        QString fileout = "./AudioFile0.pcm";
+//        QFile *inputFile = new QFile(fileout);
+
+//        inputFile->setFileName(fileout);
+//        if (false == inputFile->open(QIODevice::WriteOnly))
+//        {
+//            return ;
+//        }
+
+//        inputFile->write(gRevBuffer);
+//        inputFile->close();
+//    }
+
+    emit serialDataReady();
 }
 void SerialPortThread::comwrite(QByteArray arr)
 {
@@ -96,17 +135,26 @@ void SerialPortThread::comwrite(QByteArray arr)
     else
         qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
 
-    //    qDebug()<< "thread03:";
-    //    qDebug()<<QThread::currentThreadId();
+    //        qDebug()<< "thread03:";
+    //        qDebug()<<QThread::currentThreadId();
 }
 
-quint64 SerialPortThread::getCurrentRevLength(void)
+quint32 SerialPortThread::getCurrentRevLength(void)
 {
+    //if (mux == 0)
+    // return 0;
     return gRevDataLen;
 }
 QByteArray SerialPortThread::getRevDataArr(int start, int end)
 {
-    return gRevBuffer.mid(start, end);
+    //if (mux == 0)
+    {
+        //return 0;
+    }
+    if (start > end)
+        return gRevBuffer.left(0);
+
+    return gRevBuffer.mid(start, end-start);
 }
 
 void SerialPortThread::setComNum(QString str)

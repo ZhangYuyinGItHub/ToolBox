@@ -13,12 +13,12 @@ public:
     explicit SerialPortThread(QObject *parent);
 
     QSerialPort *pSerialPort;
-    bool gThreadSwitch;
     QString gComNum;
     qint32 gComBaudRate;
     QThread *pThread;
     QByteArray gRevBuffer;
-    quint64 gRevDataLen;
+    quint32 gRevDataLen;
+    //bool  mux ;
 
     //void run();
     void exitThread(bool sw);
@@ -26,11 +26,12 @@ public:
     void setBaudRate(qint32 baudrate);
     void restartThread(void);
     void comwrite(QByteArray arr);
-    quint64 getCurrentRevLength(void);
+    quint32 getCurrentRevLength(void);
     QByteArray getRevDataArr(int start, int end);
+    QString ByteArrayToString(QByteArray &ba);
 
 signals:
-    void serialDataReady(uint64_t current_len);
+    void serialDataReady();
 
 
 public slots:

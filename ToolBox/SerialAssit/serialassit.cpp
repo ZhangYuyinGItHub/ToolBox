@@ -66,6 +66,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     pComBaudRate->addItem("9600");
     pComBaudRate->addItem("115200");
+    pComBaudRate->addItem("1000000");
     pComBaudRate->addItem("2000000");
     pComBaudRate->addItem("3000000");
     pComBaudRate->setEditable(true);
@@ -85,7 +86,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pPlot->xAxis2->setVisible(true);
     pPlot->yAxis->setVisible(true);
     pPlot->yAxis2->setVisible(true);
-    //pPlot->setInteractions(/*QCP::iRangeDrag |*/ QCP::iRangeZoom);
+    pPlot->setInteractions(/*QCP::iRangeDrag |*/ QCP::iRangeZoom);
     pPlot->addGraph();
     pPlot->graph(0)->setPen(QPen(Qt::red));
 
@@ -205,9 +206,9 @@ void SerialAssit::audiosave()
     {
         return ;
     }
+
     inputFile->write(gRevbuf);
     inputFile->close();
-
 }
 /**
  * @brief SerialAssit::comopen
@@ -428,26 +429,34 @@ void SerialAssit::comfresh()
  *        语音数据接受槽函数，接受来自串口读取线程的语音数据，并进行绘图
  * @param data 语音数据
  */
-void SerialAssit::serialDataRev(uint64_t length0)
+void SerialAssit::serialDataRev()
 {
-    //qDebug()<<"[main] receive data from thread." + QString::number(gRevbuf.length());
+
+    quint32 length = pSerialPortThread->getCurrentRevLength();
+    quint32 length0;
+
+    if ((length == 0)||(length <= gRevDataLen))
+        return;
 
 
-    quint64 length = pSerialPortThread->getCurrentRevLength();
     QByteArray arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
-    for (;length > gRevDataLen; )
+    length0 = arr.length();
+
+    //for (;length > gRevDataLen; )
     {
-        for (quint32 index = gRevDataLen; index < length - gRevDataLen; index += 2)
+        for (quint32 index = 0  /*- gRevDataLen%2 */;
+             index < length0; index += 2)
         {
-            quint16 i0;
+
+            qint16 i0;
             i0 = arr[index+1];
             i0 = (i0<<8) | (arr[index]&0xff);
-            pPlot->graph(0)->addData(index/2, i0);
+            //qDebug()<< QString::number(i0,16);
+            pPlot->graph(0)->addData((index + gRevDataLen)/2, i0);
         }
 
-        length = pSerialPortThread->getCurrentRevLength();
-        arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
-        gRevDataLen += length;
+        gRevDataLen += length0;
+        gRevbuf.append(arr);
 
         pPlot->graph(0)->rescaleAxes();
         pPlot->replot();

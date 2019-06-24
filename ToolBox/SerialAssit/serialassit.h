@@ -1,6 +1,11 @@
 #ifndef SERIALASSIT_H
 #define SERIALASSIT_H
 
+/**
+  * @note  本功能的实现使用QSerialPort类，但是有个问题是当窗口拖动的时候会出现丢数据的问题；
+  *        可以后续尝试使用第三方库 Qextserialport
+  */
+
 #include <QWidget>
 #include <QLabel>
 #include <QComboBox>
@@ -44,7 +49,7 @@ public:
 
     QCustomPlot *pPlot;
 
-    quint64 gRevDataLen;
+    quint32 gRevDataLen;
     QByteArray gRevbuf;
 
     enum
@@ -71,7 +76,7 @@ public slots:
     void comsend(void);
     void voice_cmd_handler(void);
 
-    void serialDataRev(uint64_t length0);
+    void serialDataRev();
 };
 
 #endif // SERIALASSIT_H
