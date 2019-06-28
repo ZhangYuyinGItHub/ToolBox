@@ -17,6 +17,7 @@
 #include <QByteArray>
 #include <QFile>
 #include <QLineEdit>
+#include "win_qextserialport.h"
 
 
 const QString voice_cmd_2M = QString("87 10 11 01 E4 E1 ");
@@ -29,7 +30,6 @@ class SerialAssit : public QWidget
 public:
     explicit SerialAssit(QWidget *parent = nullptr);
 
-    QSerialPort *pSerialPort;
     SerialPortThread *pSerialPortThread;
     QLabel *pComNumLabel;
     QComboBox *pComNum;

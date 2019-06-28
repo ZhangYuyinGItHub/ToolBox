@@ -23,19 +23,24 @@ SerialPortThread::SerialPortThread(QObject *parent):
 
 void SerialPortThread::serialThreadStarted()
 {
-    if (pSerialPort == nullptr)
+    if (myCom == nullptr)
     {
         qDebug()<< "main pSerialPort is null!!!";
-        this->pSerialPort = new QSerialPort();
+        //this->myCom = new QSerialPort();
     }
     else
     {
         qDebug()<< "main pSerialPort is not null!!!";
     }
 
+    struct PortSettings myComSetting = {BAUD2000000,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
+    myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
     //pSerialPort->moveToThread(pThread);
-    connect(this->pSerialPort,&QSerialPort::readyRead,
-            this, comread, Qt::QueuedConnection);
+//    connect(this->pSerialPort,&QSerialPort::readyRead,
+//            this, comread, Qt::QueuedConnection);
+
+    //connect(myCom,SIGNAL(readyRead()),this,SLOT(comread()));
+    connect(myCom, &Win_QextSerialPort::readyRead, this, comread, Qt::QueuedConnection);
 
     qDebug()<< "thread01:";
     qDebug()<<QThread::currentThreadId();
@@ -48,20 +53,30 @@ void SerialPortThread::restartThread(void)
         pThread->start();
     }
 
-    this->pSerialPort->setPortName(gComNum);
-    if (this->pSerialPort->open(QIODevice::ReadWrite))
+    //this->pSerialPort->setPortName(gComNum);
+    //if (this->pSerialPort->open(QIODevice::ReadWrite))
     {
-        this->pSerialPort->setBaudRate(gComBaudRate);
-        this->pSerialPort->setDataBits(QSerialPort::Data8);
-        this->pSerialPort->setParity(QSerialPort::NoParity);
-        this->pSerialPort->setStopBits(QSerialPort::OneStop);
-        this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+//        this->pSerialPort->setBaudRate(gComBaudRate);
+//        this->pSerialPort->setDataBits(QSerialPort::Data8);
+//        this->pSerialPort->setParity(QSerialPort::NoParity);
+//        this->pSerialPort->setStopBits(QSerialPort::OneStop);
+//        this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
         qDebug()<< "pSerialPort open success!!!";
+
+
+
+        //定义一个结构体，用来存放串口各个参数
+        //myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
+
+        //定义串口对象，并传递参数，在构造函数里对其进行初始化
+//        connect(myCom,SIGNAL(readyRead()),this,SLOT(comread()),  Qt::QueuedConnection);
+        connect(myCom, &Win_QextSerialPort::readyRead, this, comread, Qt::QueuedConnection);
+        myCom ->open(QIODevice::ReadWrite);
 
         gRevDataLen = 0;
         gRevBuffer.clear();
     }
-    else
+    //else
     {
         qDebug()<< "pSerialPort open failed!!!";
     }
@@ -70,8 +85,8 @@ void SerialPortThread::exitThread(bool sw)
 {
     //pThread->quit();
     //pThread->terminate();
-    pSerialPort->clear();
-    pSerialPort->close();
+    //pSerialPort->clear();
+    //pSerialPort->close();
     qDebug()<< "pSerialPort thread exit!!!";
 }
 
@@ -92,7 +107,8 @@ QString SerialPortThread::ByteArrayToString(QByteArray &ba)
 void SerialPortThread::comread()
 {
     QByteArray arr;
-    arr = pSerialPort->readAll();
+    //arr = pSerialPort->readAll();
+    arr = myCom->readAll();
 
 //        qDebug()<< "thread04:";
 //        qDebug()<<QThread::currentThreadId();
@@ -112,28 +128,17 @@ void SerialPortThread::comread()
     gRevDataLen = gRevDataLen + length;
     //mux = 1;
 
-//    {
-//        QString fileout = "./AudioFile0.pcm";
-//        QFile *inputFile = new QFile(fileout);
-
-//        inputFile->setFileName(fileout);
-//        if (false == inputFile->open(QIODevice::WriteOnly))
-//        {
-//            return ;
-//        }
-
-//        inputFile->write(gRevBuffer);
-//        inputFile->close();
-//    }
-
     emit serialDataReady();
 }
 void SerialPortThread::comwrite(QByteArray arr)
 {
-    if (pSerialPort->isOpen())
-        this->pSerialPort->write(arr);
-    else
+    //if (pSerialPort->isOpen())
+        //this->pSerialPort->write(arr);
+    //else
+    {
         qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
+        myCom->write(arr);
+    }
 
     //        qDebug()<< "thread03:";
     //        qDebug()<<QThread::currentThreadId();

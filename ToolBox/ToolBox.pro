@@ -40,7 +40,10 @@ SOURCES += \
     about/about.cpp \
     voice/voice.cpp \
     voice/voice_setting.cpp \
-    SerialAssit/audiodevice.cpp
+    SerialAssit/audiodevice.cpp \
+    SerialAssit/qextserialbase.cpp \
+    SerialAssit/qextserialport.cpp \
+    SerialAssit/win_qextserialport.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -57,7 +60,10 @@ HEADERS += \
     voice/voice.h \
     voice/voice_setting.h \
     voice/adpcm_lib.h \
-    SerialAssit/audiodevice.h
+    SerialAssit/audiodevice.h \
+    SerialAssit/qextserialbase.h \
+    SerialAssit/qextserialport.h \
+    SerialAssit/win_qextserialport.h
 
 FORMS += \
     about/about.ui

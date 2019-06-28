@@ -6,19 +6,23 @@
 #include <QString>
 #include <QByteArray>
 
+#include "qextserialport.h"
+
 class SerialPortThread: public QObject
 {
     Q_OBJECT
 public:
     explicit SerialPortThread(QObject *parent);
 
-    QSerialPort *pSerialPort;
+    //QSerialPort *pSerialPort;
     QString gComNum;
     qint32 gComBaudRate;
     QThread *pThread;
     QByteArray gRevBuffer;
     quint32 gRevDataLen;
     //bool  mux ;
+
+    Win_QextSerialPort *myCom;
 
     //void run();
     void exitThread(bool sw);
