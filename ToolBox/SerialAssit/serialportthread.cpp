@@ -17,6 +17,7 @@ SerialPortThread::SerialPortThread(QObject *parent):
     connect(pThread, &QThread::started, this, &SerialPortThread::serialThreadStarted,
             Qt::QueuedConnection);
 
+    myCom = nullptr;
     pThread->start();
 
 }
@@ -26,20 +27,17 @@ void SerialPortThread::serialThreadStarted()
     if (myCom == nullptr)
     {
         qDebug()<< "main pSerialPort is null!!!";
-        //this->myCom = new QSerialPort();
+        //定义一个结构体，用来存放串口各个参数
+        struct PortSettings myComSetting = {BAUD115200,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
+        //定义串口对象，并传递参数，在构造函数里对其进行初始化
+        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
+
     }
     else
     {
         qDebug()<< "main pSerialPort is not null!!!";
     }
 
-    struct PortSettings myComSetting = {BAUD2000000,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
-    myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
-    //pSerialPort->moveToThread(pThread);
-//    connect(this->pSerialPort,&QSerialPort::readyRead,
-//            this, comread, Qt::QueuedConnection);
-
-    //connect(myCom,SIGNAL(readyRead()),this,SLOT(comread()));
     connect(myCom, &Win_QextSerialPort::readyRead, this, comread, Qt::QueuedConnection);
 
     qDebug()<< "thread01:";
@@ -53,30 +51,34 @@ void SerialPortThread::restartThread(void)
         pThread->start();
     }
 
-    //this->pSerialPort->setPortName(gComNum);
-    //if (this->pSerialPort->open(QIODevice::ReadWrite))
+    if (gComBaudRate == tr("115200"))
     {
-//        this->pSerialPort->setBaudRate(gComBaudRate);
-//        this->pSerialPort->setDataBits(QSerialPort::Data8);
-//        this->pSerialPort->setParity(QSerialPort::NoParity);
-//        this->pSerialPort->setStopBits(QSerialPort::OneStop);
-//        this->pSerialPort->setFlowControl(QSerialPort::NoFlowControl);
-        qDebug()<< "pSerialPort open success!!!";
-
-
-
-        //定义一个结构体，用来存放串口各个参数
-        //myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
-
+        struct PortSettings myComSetting = {BAUD115200,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
         //定义串口对象，并传递参数，在构造函数里对其进行初始化
-//        connect(myCom,SIGNAL(readyRead()),this,SLOT(comread()),  Qt::QueuedConnection);
-        connect(myCom, &Win_QextSerialPort::readyRead, this, comread, Qt::QueuedConnection);
-        myCom ->open(QIODevice::ReadWrite);
+        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
+         qDebug()<< "-----01--->";
+    }
+    else if (gComBaudRate == tr("2000000"))
+    {
+        struct PortSettings myComSetting = {BAUD2000000,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
+        //定义串口对象，并传递参数，在构造函数里对其进行初始化
+        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
+        qDebug()<< "-----02--->";
+    }
+//    myCom->setDataBits(DATA_8);
+//    myCom->setFlowControl(FLOW_OFF);
+//    myCom->setParity(PAR_NONE);
+//    myCom->setStopBits(STOP_1);
+//    myCom->setPortName("com3");
+    myCom->open(QIODevice::ReadWrite);
+    if (myCom->isOpen())
+    {
+        qDebug()<< "pSerialPort open success!!!";
 
         gRevDataLen = 0;
         gRevBuffer.clear();
     }
-    //else
+    else
     {
         qDebug()<< "pSerialPort open failed!!!";
     }
@@ -85,8 +87,7 @@ void SerialPortThread::exitThread(bool sw)
 {
     //pThread->quit();
     //pThread->terminate();
-    //pSerialPort->clear();
-    //pSerialPort->close();
+    myCom->close();
     qDebug()<< "pSerialPort thread exit!!!";
 }
 
@@ -130,18 +131,21 @@ void SerialPortThread::comread()
 
     emit serialDataReady();
 }
+
+
 void SerialPortThread::comwrite(QByteArray arr)
 {
-    //if (pSerialPort->isOpen())
-        //this->pSerialPort->write(arr);
-    //else
+    if (/*(myCom != nullptr)&&*/(myCom->isOpen()))
     {
-        qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
+        qDebug()<< "[SerialPortThread]com write!!!=="<<ByteArrayToString(arr);
+
         myCom->write(arr);
     }
+    else
+    {
+        qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
+    }
 
-    //        qDebug()<< "thread03:";
-    //        qDebug()<<QThread::currentThreadId();
 }
 
 quint32 SerialPortThread::getCurrentRevLength(void)
@@ -167,8 +171,7 @@ void SerialPortThread::setComNum(QString str)
     gComNum.clear();
     gComNum = str;
 }
-void SerialPortThread::setBaudRate(qint32 baudrate)
+void SerialPortThread::setBaudRate(QString baudrate)
 {
-
     gComBaudRate = baudrate;
 }

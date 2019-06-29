@@ -16,7 +16,7 @@ public:
 
     //QSerialPort *pSerialPort;
     QString gComNum;
-    qint32 gComBaudRate;
+    QString gComBaudRate;
     QThread *pThread;
     QByteArray gRevBuffer;
     quint32 gRevDataLen;
@@ -27,7 +27,7 @@ public:
     //void run();
     void exitThread(bool sw);
     void setComNum(QString str);
-    void setBaudRate(qint32 baudrate);
+    void setBaudRate(QString baudrate);
     void restartThread(void);
     void comwrite(QByteArray arr);
     quint32 getCurrentRevLength(void);

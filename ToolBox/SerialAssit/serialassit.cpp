@@ -225,7 +225,7 @@ void SerialAssit::comopen()
         pComOpenBtn->setText(tr("关闭串口"));
         pComRefreshBtn->setEnabled(false);
 
-        pSerialPortThread->setBaudRate(pComBaudRate->currentText().toInt());
+        pSerialPortThread->setBaudRate(pComBaudRate->currentText());
         pSerialPortThread->setComNum(pComNum->currentText());
         pSerialPortThread->restartThread();
 
