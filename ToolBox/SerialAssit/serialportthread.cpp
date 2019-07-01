@@ -51,28 +51,38 @@ void SerialPortThread::restartThread(void)
         pThread->start();
     }
 
-    if (gComBaudRate == tr("115200"))
+    ComBaud mBaud;
+    if (gComBaudRate == tr("9600"))
     {
-        struct PortSettings myComSetting = {BAUD115200,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
-        //定义串口对象，并传递参数，在构造函数里对其进行初始化
-        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
-         qDebug()<< "-----01--->";
+        mBaud = BAUD9600;
+    }
+    else if (gComBaudRate == tr("115200"))
+    {
+        mBaud = BAUD115200;
     }
     else if (gComBaudRate == tr("2000000"))
     {
-        struct PortSettings myComSetting = {BAUD2000000,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
-        //定义串口对象，并传递参数，在构造函数里对其进行初始化
-        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
-        qDebug()<< "-----02--->";
+        mBaud = BAUD2000000;
     }
-//    myCom->setDataBits(DATA_8);
-//    myCom->setFlowControl(FLOW_OFF);
-//    myCom->setParity(PAR_NONE);
-//    myCom->setStopBits(STOP_1);
-//    myCom->setPortName("com3");
+    else if (gComBaudRate == tr("1000000"))
+    {
+        mBaud = BAUD1000000;
+    }
+    else if (gComBaudRate == tr("3000000"))
+    {
+        mBaud = BAUD3000000;
+    }
+
+
+    myCom->setPortName(gComNum);
     myCom->open(QIODevice::ReadWrite);
     if (myCom->isOpen())
     {
+        myCom->setBaudRate(mBaud);
+        myCom->setDataBits(DATA_8);
+        myCom->setFlowControl(FLOW_OFF);
+        myCom->setParity(PAR_NONE);
+        myCom->setStopBits(STOP_1);
         qDebug()<< "pSerialPort open success!!!";
 
         gRevDataLen = 0;
@@ -111,8 +121,8 @@ void SerialPortThread::comread()
     //arr = pSerialPort->readAll();
     arr = myCom->readAll();
 
-//        qDebug()<< "thread04:";
-//        qDebug()<<QThread::currentThreadId();
+    //        qDebug()<< "thread04:";
+    //        qDebug()<<QThread::currentThreadId();
 
     quint16 length = arr.length();
     if (length %2)

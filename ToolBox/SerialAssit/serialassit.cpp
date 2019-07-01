@@ -69,7 +69,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pComBaudRate->addItem("1000000");
     pComBaudRate->addItem("2000000");
     pComBaudRate->addItem("3000000");
-    pComBaudRate->setEditable(true);
+    pComBaudRate->setEditable(false);
 
     /*开启线程串口通讯*/
     pSerialPortThread = new SerialPortThread(nullptr);

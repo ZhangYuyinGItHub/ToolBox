@@ -69,7 +69,7 @@ enum NamingConvention
     LINUX_NAMES
 };
 
-enum BaudRateType 
+typedef enum BaudRateType
 {
     BAUD50,                //POSIX ONLY
     BAUD75,                //POSIX ONLY
@@ -93,8 +93,10 @@ enum BaudRateType
     BAUD115200,
     BAUD128000,            //WINDOWS ONLY
     BAUD256000,             //WINDOWS ONLY
-    BAUD2000000
-};
+    BAUD2000000,
+    BAUD1000000,
+    BAUD3000000
+}ComBaud;
 
 enum DataBitsType 
 {

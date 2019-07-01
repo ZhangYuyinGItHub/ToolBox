@@ -862,11 +862,20 @@ void Win_QextSerialPort::setBaudRate(BaudRateType baudRate) {
             TTY_PORTABILITY_WARNING("Win_QextSerialPort Portability Warning: POSIX does not support 256000 baud operation.");
             Win_CommConfig.dcb.BaudRate=CBR_256000;
             break;
-
+            /*1000000 baud*/
+        case BAUD1000000:
+            TTY_PORTABILITY_WARNING("Win_QextSerialPort Portability Warning: POSIX does not support 256000 baud operation.");
+            Win_CommConfig.dcb.BaudRate=CBR_2000000;
+            break;
             /*256000 baud*/
         case BAUD2000000:
             TTY_PORTABILITY_WARNING("Win_QextSerialPort Portability Warning: POSIX does not support 256000 baud operation.");
             Win_CommConfig.dcb.BaudRate=CBR_2000000;
+            break;
+
+        case BAUD3000000:
+            TTY_PORTABILITY_WARNING("Win_QextSerialPort Portability Warning: POSIX does not support 256000 baud operation.");
+            Win_CommConfig.dcb.BaudRate=CBR_3000000;
             break;
         }
         SetCommConfig(Win_Handle, &Win_CommConfig, sizeof(COMMCONFIG));
