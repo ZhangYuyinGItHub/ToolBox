@@ -26,7 +26,9 @@ void SerialPortThread::serialThreadStarted()
 {
     if (myCom == nullptr)
     {
+#if DEBUG_EN
         qDebug()<< "main pSerialPort is null!!!";
+#endif
         //定义一个结构体，用来存放串口各个参数
         struct PortSettings myComSetting = {BAUD115200,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
         //定义串口对象，并传递参数，在构造函数里对其进行初始化
@@ -35,19 +37,24 @@ void SerialPortThread::serialThreadStarted()
     }
     else
     {
+#if DEBUG_EN
         qDebug()<< "main pSerialPort is not null!!!";
+#endif
     }
 
     connect(myCom, &Win_QextSerialPort::readyRead, this, comread, Qt::QueuedConnection);
-
+#if DEBUG_EN
     qDebug()<< "thread01:";
     qDebug()<<QThread::currentThreadId();
+#endif
 }
 void SerialPortThread::restartThread(void)
 {
     if (!pThread->isRunning())
     {
+#if DEBUG_EN
         qDebug()<< "restart serial thread\r\n";
+#endif
         pThread->start();
     }
 
@@ -83,14 +90,18 @@ void SerialPortThread::restartThread(void)
         myCom->setFlowControl(FLOW_OFF);
         myCom->setParity(PAR_NONE);
         myCom->setStopBits(STOP_1);
+#if DEBUG_EN
         qDebug()<< "pSerialPort open success!!!";
+#endif
 
         gRevDataLen = 0;
         gRevBuffer.clear();
     }
     else
     {
+#if DEBUG_EN
         qDebug()<< "pSerialPort open failed!!!";
+#endif
     }
 }
 void SerialPortThread::exitThread(bool sw)
@@ -98,7 +109,9 @@ void SerialPortThread::exitThread(bool sw)
     //pThread->quit();
     //pThread->terminate();
     myCom->close();
+#if DEBUG_EN
     qDebug()<< "pSerialPort thread exit!!!";
+#endif
 }
 
 QString SerialPortThread::ByteArrayToString(QByteArray &ba)
@@ -121,17 +134,16 @@ void SerialPortThread::comread()
     //arr = pSerialPort->readAll();
     arr = myCom->readAll();
 
-    //        qDebug()<< "thread04:";
-    //        qDebug()<<QThread::currentThreadId();
-
     quint16 length = arr.length();
     if (length %2)
     {
         arr.remove(length, 1);
         length -= 1;
 
+#if DEBUG_EN
         qDebug()<< "thread04:";
         qDebug()<<QThread::currentThreadId();
+#endif
     }
 
     //mux = 0;
@@ -147,13 +159,17 @@ void SerialPortThread::comwrite(QByteArray arr)
 {
     if (/*(myCom != nullptr)&&*/(myCom->isOpen()))
     {
+#if DEBUG_EN
         qDebug()<< "[SerialPortThread]com write!!!=="<<ByteArrayToString(arr);
+#endif
 
         myCom->write(arr);
     }
     else
     {
+#if DEBUG_EN
         qDebug()<< "[SerialPortThread]pSerialPort is not opened!!!";
+#endif
     }
 
 }

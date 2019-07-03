@@ -75,9 +75,10 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pSerialPortThread = new SerialPortThread(nullptr);
     connect(pSerialPortThread, &SerialPortThread::serialDataReady,
             this, &SerialAssit::serialDataRev);
-
+#if DEBUG_EN
     qDebug()<< "main thread id:";
     qDebug()<<QThread::currentThreadId();
+#endif
 
     /* 2. 曲线参数设置 */
     gRevDataLen = 0;
@@ -88,7 +89,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pPlot->yAxis2->setVisible(true);
     pPlot->setInteractions(/*QCP::iRangeDrag |*/ QCP::iRangeZoom);
     pPlot->addGraph();
-    pPlot->graph(0)->setPen(QPen(Qt::red));
+    pPlot->graph(0)->setPen(QPen(Qt::blue));
 
     /* 页面布局设置 */
     QHBoxLayout *pLayout01 = new QHBoxLayout();
@@ -170,7 +171,7 @@ void SerialAssit::audioplay()
     //设置采样率
     audioFormat.setSampleRate(16000);
     //设置通道数
-    audioFormat.setChannelCount(1);
+    audioFormat.setChannelCount(2);
     //设置采样大小，一般为8位或16位
     audioFormat.setSampleSize(16);
     //设置编码方式
@@ -217,7 +218,9 @@ void SerialAssit::audiosave()
  */
 void SerialAssit::comopen()
 {
+#if DEBUG_EN
     qDebug()<<pComOpenBtn->text();
+#endif
     if (pComOpenBtn->text() == tr("打开串口"))
     {
         pComNum->setEnabled(false);
@@ -253,16 +256,21 @@ void SerialAssit::comopen()
         pSerialPortThread->exitThread(true);
         if (pSerialPortThread == nullptr)
         {
+#if DEBUG_EN
             qDebug() << "pSerialPortThread is null";
+#endif
         }
         else
         {
+#if DEBUG_EN
             qDebug() << "pSerialPortThread is exit";
+#endif
         }
 
     }
-
+#if DEBUG_EN
     qDebug() << "com open "+QString::number((int)QThread::currentThreadId());
+#endif
 }
 /**
  * @brief SerialAssit::comsend
@@ -276,7 +284,9 @@ void SerialAssit::comsend()
 
     {
         pSerialPortThread->comwrite(arr);
+#if DEBUG_EN
         qDebug()<<"[main] send data " + ByteArrayToHexString(arr);
+#endif
     }
 
 }
@@ -387,7 +397,9 @@ void SerialAssit::comfresh()
         inputFile->setFileName(fileout);
         if (false == inputFile->open(QIODevice::ReadOnly))
         {
+#if DEBUG_EN
             qDebug()<<"file open failed";
+#endif
             return ;
         }
 
@@ -409,7 +421,9 @@ void SerialAssit::comfresh()
         QAudioOutput *audio = new QAudioOutput( audioFormat, 0);
         if (!audio)
         {
+#if DEBUG_EN
             qDebug()<<"audio open failed";
+#endif
             return;
         }
         audio->start(inputFile);
