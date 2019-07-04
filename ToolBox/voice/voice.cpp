@@ -131,6 +131,7 @@ voice::voice(QWidget *parent) : QWidget(parent)
 
     /*audio 设置*/
     {
+
         pAudioInputFile = new QFile();
 
         //设置采样格式
@@ -151,7 +152,7 @@ voice::voice(QWidget *parent) : QWidget(parent)
         audio = new QAudioOutput( audioFormat, 0);
     }
 }
-
+#if 0
 void voice::audio_start_play(QString file_path)
 {
     {
@@ -211,6 +212,10 @@ void voice::audio_start_play(QString file_path)
         //设置样本数据类型
         audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
+        if (audio != NULL)
+        {
+            delete audio;
+        }
         /*QAudioOutput **/audio = new QAudioOutput( audioFormat, 0);
         if (!audio)
         {
@@ -224,7 +229,7 @@ void voice::audio_start_play(QString file_path)
         //qDebug()<< "---sbc sample channel node---->"<<audio->format().channelCount();
     }
 }
-
+#endif
 /*
  * @brief 曲线右键菜单
 */
@@ -266,6 +271,7 @@ void voice::show_region_context_menu(QMouseEvent *event)
             pPlotR->removeGraph(0);
             pPlotR->replot();
             audio->stop();
+            pAudioInputFile->close();
         }
 
         //contextMenu.exec(QWidget::pos());
@@ -400,13 +406,13 @@ void voice::drawAudioPlot(QString filename)
     }
 
     QByteArray arr = inputFile->readAll();
-    if (arr.size() > 400*1024)
+    if (arr.size() > 600*1024)
     {
-        QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot! 40k exceeed"),
+        QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot! 600k exceeed"),
                                  QMessageBox::Ok );
         //inputFile->close();
         //return;
-        arr = arr.left(400*1024);
+        arr = arr.left(600*1024);
     }
 
     /*2. 画图*/
@@ -466,6 +472,8 @@ void voice::audioplay(QString filepath)
     pAudioInputFile->setFileName(filepath);
     if (false == pAudioInputFile->open(QIODevice::ReadOnly))
     {
+        QMessageBox::information(NULL, "Error", tr("Failed: audio file open failed."),
+                                 QMessageBox::Ok );
         return ;
     }
 
@@ -476,7 +484,7 @@ void voice::audioplay(QString filepath)
 void voice::voice_setting_ok_clicked()
 {
 
-    audio_start_play("./AudioFile.pcm");
+    //audio_start_play("./AudioFile.pcm");
 
 
 }
