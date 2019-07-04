@@ -26,7 +26,8 @@ class voice : public QWidget
 public:
     explicit voice(QWidget *parent = nullptr);
 
-    QCustomPlot *pPlot;
+    QCustomPlot *pPlotL;
+    QCustomPlot *pPlotR;
     QPushButton *pSbcFileLoadBtn;
     QPushButton *pPcmFileOutBtn ;
     QLineEdit   *pSbcInFilePath;
@@ -52,6 +53,9 @@ public:
     QAudioOutput *audio;
 
     voice_setting *pVSetting;
+    unsigned int voice_channel_mode;
+    unsigned int voice_sample_sample;
+    unsigned int voice_sample_size;
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
@@ -59,7 +63,7 @@ protected:
 public:
     void audioplay(QString filepath);
     void drawAudioPlot(QString filename);
-
+    void audio_start_play(QString file_path);
 signals:
 
 public slots:
@@ -73,6 +77,7 @@ public slots:
     void codec_2_pcm(void);
 
     void show_region_context_menu(QMouseEvent*event);
+    void voice_setting_ok_clicked();
 };
 
 #endif // SBC_H

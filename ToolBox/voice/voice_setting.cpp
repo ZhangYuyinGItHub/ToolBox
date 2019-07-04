@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QLabel>
+#include "voice.h"
 
 voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(parent)
 {
@@ -126,7 +127,7 @@ voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(pare
                 &voice_setting::voice_adpcm_setting);
     }
 
-    QPushButton *pOKBtn = new QPushButton("OK");
+    pOKBtn = new QPushButton("OK");
     connect(pOKBtn, &QPushButton::clicked,this, &voice_setting::voice_config_ok);
 
     pVLayout1->addWidget(pSbcGroup);
@@ -197,6 +198,8 @@ void voice_setting::voice_config_ok()
         gSbcParam.samplingFrequency = pSamFreqCombox->currentIndex();
         gSbcParam.subbandNumber = pSubBandCombox->currentIndex();
 
+        //qDebug()<< "---sbc---->"<<gSbcParam.samplingFrequency;
+
     }else if (gVoiceCodecType == MSBC_TYPE_CODEC)
     {
 
@@ -243,4 +246,13 @@ void* voice_setting::getSbcParam()
 int voice_setting::getAdpcmParam()
 {
     return gAdpcmEncodeType;
+}
+
+int voice_setting::getVoiceChalMode()
+{
+    return gSbcParam.channelMode;
+}
+int voice_setting::getVoiceSampleRate()
+{
+    return gSbcParam.samplingFrequency;
 }

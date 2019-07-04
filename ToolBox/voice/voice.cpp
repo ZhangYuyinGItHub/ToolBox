@@ -8,27 +8,37 @@
 #include <QSound>
 #include <QFileDialog>
 #include <QMessageBox>
-
+#include "./SerialAssit/audiodevice.h"
 
 voice::voice(QWidget *parent) : QWidget(parent)
 {
     pVSetting = new voice_setting(this);
 
+    connect(pVSetting->pOKBtn, &QPushButton::clicked,this, &voice::voice_setting_ok_clicked);
 
     mAudioCodecMode = 0;
 
     /* 1. 曲线参数设置 */
-    pPlot = new QCustomPlot();
-    pPlot->xAxis->setVisible(true);
-    pPlot->xAxis2->setVisible(true);
-    pPlot->yAxis->setVisible(true);
-    pPlot->yAxis2->setVisible(true);
-    pPlot->setInteractions(/*QCP::iRangeDrag | */QCP::iRangeZoom);
-    pPlot->addGraph();
-    pPlot->graph(0)->setPen(QPen(Qt::red));
+    pPlotL = new QCustomPlot();
+    pPlotL->xAxis->setVisible(true);pPlotL->xAxis->setTickLabels(false);
+    pPlotL->xAxis2->setVisible(true);pPlotL->xAxis2->setTickLabels(false);
+    pPlotL->yAxis->setVisible(true);pPlotL->yAxis->setTickLabels(false);
+    pPlotL->yAxis2->setVisible(true);pPlotL->yAxis2->setTickLabels(false);
+    pPlotL->setInteractions(/*QCP::iRangeDrag | */QCP::iRangeZoom);
+    pPlotL->addGraph();
+    pPlotL->graph(0)->setPen(QPen(Qt::red));
 
-    connect(pPlot, &QCustomPlot::mousePress, this, &voice::show_region_context_menu);
+    connect(pPlotL, &QCustomPlot::mousePress, this, &voice::show_region_context_menu);
 
+    pPlotR = new QCustomPlot();
+    pPlotR->xAxis->setVisible(true);pPlotR->xAxis->setTickLabels(false);
+    pPlotR->xAxis2->setVisible(true);pPlotR->xAxis2->setTickLabels(false);
+    pPlotR->yAxis->setVisible(true); pPlotR->yAxis->setTickLabels(false);
+    pPlotR->yAxis2->setVisible(true);pPlotR->yAxis2->setTickLabels(false);
+    pPlotR->setInteractions(/*QCP::iRangeDrag | */QCP::iRangeZoom);
+    pPlotR->addGraph();
+    pPlotR->graph(0)->setPen(QPen(Qt::red));
+    connect(pPlotR, &QCustomPlot::mousePress, this, &voice::show_region_context_menu);
 
     /*SBC --> PCM*/
     pSbc2PcmGroup = new QGroupBox("SBC --> PCM");
@@ -106,10 +116,12 @@ voice::voice(QWidget *parent) : QWidget(parent)
     /* 页面布局设置 */
     QVBoxLayout *pLayout02 = new QVBoxLayout(this);
     //pLayout02->addStretch(1);
-    pLayout02->addWidget(pPlot, 1);
+    pLayout02->addWidget(pPlotL, 1);
+    pLayout02->addWidget(pPlotR, 1);
+    pPlotR->setVisible(false);
     pLayout02->addWidget(pSbc2PcmGroup, 0);
     pLayout02->addWidget(pPcm2SbcGroup, 0);
-
+    pLayout02->setSpacing(0);
     /*编码对象创建*/
     {
         psbc = new Sbc_lib();
@@ -126,7 +138,7 @@ voice::voice(QWidget *parent) : QWidget(parent)
         //设置采样率
         audioFormat.setSampleRate(16000);
         //设置通道数
-        audioFormat.setChannelCount(1);
+        audioFormat.setChannelCount(2);
         //设置采样大小，一般为8位或16位
         audioFormat.setSampleSize(16);
         //设置编码方式
@@ -140,6 +152,79 @@ voice::voice(QWidget *parent) : QWidget(parent)
     }
 }
 
+void voice::audio_start_play(QString file_path)
+{
+    {
+        QString file_path = "./AudioFile.pcm";
+        QFile *inputFile = new QFile(file_path);
+
+        /*1. read audio data*/
+        inputFile->setFileName(file_path);
+        if (false == inputFile->open(QIODevice::ReadOnly))
+        {
+            return ;
+        }
+
+        QByteArray audio_data = inputFile->readAll();
+        inputFile->close();
+
+        /*2. create audio device*/
+        audiodevice *audiodev = new audiodevice(audio_data); //创建自定义的IO设备
+
+        //设置采样格式
+        QAudioFormat audioFormat;
+        //设置采样率
+        switch (pVSetting->getVoiceSampleRate()) {
+        case 0:
+            audioFormat.setSampleRate(16000);
+            break;
+        case 1:
+            audioFormat.setSampleRate(32000);
+            break;
+        case 2:
+            audioFormat.setSampleRate(44100);
+            break;
+        case 3:
+            audioFormat.setSampleRate(48000);
+            break;
+        default:
+            break;
+        }
+        //设置通道数
+        //audioFormat.setChannelCount(2);
+        if (pVSetting->getVoiceChalMode() == 0)
+        {
+            pPlotR->setVisible(false);
+            audioFormat.setChannelCount(1);
+        }
+        else
+        {
+            pPlotR->setVisible(true);
+            audioFormat.setChannelCount(2);
+        }
+        //设置采样大小，一般为8位或16位
+        audioFormat.setSampleSize(16);
+        //设置编码方式
+        audioFormat.setCodec("audio/pcm");
+        //设置字节序
+        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+        //设置样本数据类型
+        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+        /*QAudioOutput **/audio = new QAudioOutput( audioFormat, 0);
+        if (!audio)
+        {
+            return;
+        }
+        audio->start(audiodev);
+        //inputFile->close();//打开之后无法播放语音
+
+
+        //qDebug()<< "---sbc samplerate---->"<<audio->format().sampleRate();
+        //qDebug()<< "---sbc sample channel node---->"<<audio->format().channelCount();
+    }
+}
+
 /*
  * @brief 曲线右键菜单
 */
@@ -147,12 +232,13 @@ void voice::show_region_context_menu(QMouseEvent *event)
 {
     if(event->button()==Qt::RightButton)
     {
-        QMenu contextMenu(pPlot);
+        QMenu contextMenu(pPlotL);
 
         QAction *pRescale = contextMenu.addAction("RescaleAxes");
         pRescale->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
         QAction *pRepaly = contextMenu.addAction("Replay");
         pRepaly->setIcon(QIcon(":/new/prefix1/Image/replay_icon.png"));
+        QAction *pClear = contextMenu.addAction("Clear");
         contextMenu.addAction("...");
 
         /*
@@ -162,12 +248,24 @@ void voice::show_region_context_menu(QMouseEvent *event)
 
         if (selectaction == pRescale)
         {
-            pPlot->graph(0)->rescaleAxes();
-            pPlot->replot();
+            pPlotL->graph(0)->rescaleAxes();
+            pPlotL->replot();
+            pPlotR->graph(0)->rescaleAxes();
+            pPlotR->replot();
         }
         else if (selectaction == pRepaly)
         {
             audioplay(pAudioInputFile->fileName());
+        }
+        else if (selectaction == pClear)
+        {
+            pPlotL->graph(0)->data().clear();
+            pPlotL->removeGraph(0);
+            pPlotL->replot();
+            pPlotR->graph(0)->data().clear();
+            pPlotR->removeGraph(0);
+            pPlotR->replot();
+            audio->stop();
         }
 
         //contextMenu.exec(QWidget::pos());
@@ -263,6 +361,7 @@ void voice::codec_2_pcm(void)
     {
         ret = psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
                                pPcmOutFilePath->text().toLatin1().data());
+        qDebug()<<"sbc decoder ret = "<<ret;
     }
     else if (mAudioCodecMode == 1)
     {
@@ -301,32 +400,62 @@ void voice::drawAudioPlot(QString filename)
     }
 
     QByteArray arr = inputFile->readAll();
-    if (arr.size() > 200*1024)
+    if (arr.size() > 400*1024)
     {
-        QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot!"),
+        QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot! 40k exceeed"),
                                  QMessageBox::Ok );
-        inputFile->close();
-        return;
+        //inputFile->close();
+        //return;
+        arr = arr.left(400*1024);
     }
 
     /*2. 画图*/
 
-    //不添加一下两行的话，时间会比较久
-    pPlot->removeGraph(0);
-    pPlot->addGraph(0);
-
-    for (int index = 0; index < arr.size(); index = index + 2)
+    if (pVSetting->getVoiceChalMode() == 0)
     {
-        qint16 i0 = 0;
-        i0 = arr[index+1] ;
-        //低字节在放在低八位之前，必须先与上0xff,否则i0高八位在低字节为负数时永远为0xff
-        i0 = (((i0<<8) )| (arr[index] & 0xff));
+        //不添加一下两行的话，时间会比较久
+        pPlotL->removeGraph(0);
+        pPlotL->addGraph(0);
 
-        pPlot->graph(0)->addData(index, i0);
+        for (int index = 0; index < arr.size(); index = index + 2)
+        {
+            qint16 i0 = 0;
+            i0 = arr[index+1] ;
+            //低字节在放在低八位之前，必须先与上0xff,否则i0高八位在低字节为负数时永远为0xff
+            i0 = (((i0<<8) )| (arr[index] & 0xff));
+
+            pPlotL->graph(0)->addData(index, i0);
+        }
+
+        pPlotL->graph(0)->rescaleAxes();
+        pPlotL->replot();
     }
+    else
+    {
+        //不添加一下两行的话，时间会比较久
+        pPlotL->removeGraph(0);
+        pPlotL->addGraph(0);
+        pPlotR->removeGraph(0);
+        pPlotR->addGraph(0);
 
-    pPlot->graph(0)->rescaleAxes();
-    pPlot->replot();
+        for (int index = 0; index < arr.size() - 4; index = index + 4)
+        {
+            qint16 i0 = 0;
+            i0 = arr[index+1] ;
+            //低字节在放在低八位之前，必须先与上0xff,否则i0高八位在低字节为负数时永远为0xff
+            i0 = (((i0<<8) )| (arr[index] & 0xff));
+            pPlotL->graph(0)->addData(index, i0);
+
+            i0 = arr[index+3];
+            i0 = (((i0<<8) )| (arr[index+2] & 0xff));
+            pPlotR->graph(0)->addData(index, i0);
+        }
+
+        pPlotL->graph(0)->rescaleAxes();
+        pPlotL->replot();
+        pPlotR->graph(0)->rescaleAxes();
+        pPlotR->replot();
+    }
 
     /*3. 关闭文件*/
     inputFile->close();
@@ -343,6 +472,13 @@ void voice::audioplay(QString filepath)
     audio->start(pAudioInputFile);
 
     //inputFile->close();//打开之后无法播放语音
+}
+void voice::voice_setting_ok_clicked()
+{
+
+    audio_start_play("./AudioFile.pcm");
+
+
 }
 
 /*
@@ -392,6 +528,7 @@ void voice::contextMenuEvent(QContextMenuEvent *event)
 
         pPcmFileLoadBtn->setText("load pcm");
         pSbcFileOutBtn->setText("output sbc");
+
     }
     else if(selectaction == pMsbcDrag)
     {

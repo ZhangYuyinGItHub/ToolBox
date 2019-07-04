@@ -61,11 +61,14 @@ public:
 
     sbc_param gSbcParam;
 
+    QPushButton *pOKBtn;
+
     int getVoiceCodedType();
     void show_window(codec_type type);
     void *getSbcParam();
     int getAdpcmParam();
-
+    int getVoiceChalMode();
+    int getVoiceSampleRate();
 signals:
 
 public slots:

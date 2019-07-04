@@ -30,8 +30,8 @@
         </font>
        </property>
        <property name="text">
-        <string>Tool Box v2.1
-2019-06-21</string>
+        <string>Tool Box v2.2
+2019-07-01</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignBottom|Qt::AlignHCenter</set>
