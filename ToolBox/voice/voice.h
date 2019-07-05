@@ -19,6 +19,7 @@
 #include "voice/adpcm_lib.h"
 
 #include "voice_setting.h"
+#include "./SerialAssit/audiodevice.h"
 
 class voice : public QWidget
 {
@@ -51,6 +52,7 @@ public:
 
     QFile *pAudioInputFile;
     QAudioOutput *audio;
+    audiodevice *audiodev;
 
     voice_setting *pVSetting;
     unsigned int voice_channel_mode;
@@ -78,6 +80,8 @@ public slots:
 
     void show_region_context_menu(QMouseEvent*event);
     void voice_setting_ok_clicked();
+
+    void audio_state_changed(QAudio::State state);
 };
 
 #endif // SBC_H

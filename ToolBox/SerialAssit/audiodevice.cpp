@@ -9,6 +9,7 @@ audiodevice::audiodevice(QByteArray pcm) : data_pcm(pcm)
 
 audiodevice::~audiodevice()
 {
+    data_pcm.clear();
     this->close();
 }
 

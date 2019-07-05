@@ -171,7 +171,7 @@ void SerialAssit::audioplay()
     //设置采样率
     audioFormat.setSampleRate(16000);
     //设置通道数
-    audioFormat.setChannelCount(2);
+    audioFormat.setChannelCount(1);
     //设置采样大小，一般为8位或16位
     audioFormat.setSampleSize(16);
     //设置编码方式

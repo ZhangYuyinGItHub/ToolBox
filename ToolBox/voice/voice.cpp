@@ -8,7 +8,7 @@
 #include <QSound>
 #include <QFileDialog>
 #include <QMessageBox>
-#include "./SerialAssit/audiodevice.h"
+
 
 voice::voice(QWidget *parent) : QWidget(parent)
 {
@@ -150,14 +150,26 @@ voice::voice(QWidget *parent) : QWidget(parent)
         audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
         audio = new QAudioOutput( audioFormat, 0);
+
+        connect(audio, &QAudioOutput::stateChanged, this, &voice::audio_state_changed);
     }
 }
-#if 0
+void voice::audio_state_changed(QAudio::State state)
+{
+    if (state != QAudio::ActiveState)
+    {
+        qDebug()<<"audio state is "<<state;
+        //audio->stop();
+        //delete audiodev;
+    }
+}
+
 void voice::audio_start_play(QString file_path)
 {
     {
-        QString file_path = "./AudioFile.pcm";
+        //QString file_path = "./AudioFile.pcm";
         QFile *inputFile = new QFile(file_path);
+        pAudioInputFile->setFileName(file_path);
 
         /*1. read audio data*/
         inputFile->setFileName(file_path);
@@ -170,7 +182,9 @@ void voice::audio_start_play(QString file_path)
         inputFile->close();
 
         /*2. create audio device*/
-        audiodevice *audiodev = new audiodevice(audio_data); //创建自定义的IO设备
+        if (audiodev != nullptr)
+            delete audiodev;
+        audiodev = new audiodevice(audio_data); //创建自定义的IO设备
 
         //设置采样格式
         QAudioFormat audioFormat;
@@ -212,24 +226,23 @@ void voice::audio_start_play(QString file_path)
         //设置样本数据类型
         audioFormat.setSampleType(QAudioFormat::UnSignedInt);
 
-        if (audio != NULL)
+        if (audio != nullptr)
         {
             delete audio;
         }
-        /*QAudioOutput **/audio = new QAudioOutput( audioFormat, 0);
+
+        audio = new QAudioOutput( audioFormat, 0);
         if (!audio)
         {
             return;
         }
+        connect(audio, &QAudioOutput::stateChanged, this, &voice::audio_state_changed);
         audio->start(audiodev);
         //inputFile->close();//打开之后无法播放语音
 
-
-        //qDebug()<< "---sbc samplerate---->"<<audio->format().sampleRate();
-        //qDebug()<< "---sbc sample channel node---->"<<audio->format().channelCount();
     }
 }
-#endif
+
 /*
  * @brief 曲线右键菜单
 */
@@ -243,7 +256,13 @@ void voice::show_region_context_menu(QMouseEvent *event)
         pRescale->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
         QAction *pRepaly = contextMenu.addAction("Replay");
         pRepaly->setIcon(QIcon(":/new/prefix1/Image/replay_icon.png"));
-        QAction *pClear = contextMenu.addAction("Clear");
+        QAction *pClear = contextMenu.addAction("Clear Data");
+        QAction *pSuspend;
+        if (audio->state() == QAudio::SuspendedState)
+            pSuspend = contextMenu.addAction("Suspend Audio");
+        else
+            pSuspend = contextMenu.addAction("Resume Audio");
+        QAction *pStop = contextMenu.addAction("Stop Audio");
         contextMenu.addAction("...");
 
         /*
@@ -273,6 +292,17 @@ void voice::show_region_context_menu(QMouseEvent *event)
             audio->stop();
             pAudioInputFile->close();
         }
+        else if (selectaction == pSuspend)
+        {
+            if (audio->state() == QAudio::SuspendedState)
+                audio->resume();
+            else
+                audio->suspend();
+        }
+        else if (selectaction == pStop)
+        {
+            audio->stop();
+        }
 
         //contextMenu.exec(QWidget::pos());
         //不加此句，自定义QGraphicsItem子类无法接收右键事件
@@ -282,20 +312,20 @@ void voice::show_region_context_menu(QMouseEvent *event)
 
 void voice::sbc_file_load(void)
 {
-    //    QMessageBox::information(NULL, "SBC", tr("sbc_file_load! "),
-    //                             QMessageBox::Ok );
-
     QString fileout = QFileDialog::getOpenFileName(this, tr("加载SBC文件"), "","*.dat",0);
     if (!fileout.isNull())
     {
         pSbcInFilePath->setText(fileout);
     }
+    else
+    {
+        fileout.clear();
+    }
 }
 
 void voice::coded_file_output(void)
 {
-    //    QMessageBox::information(NULL, "SBC", tr("coded_file_output! "),
-    //                             QMessageBox::Ok );
+
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.dat",0);
     if (!fileout.isNull())
     {
@@ -304,8 +334,6 @@ void voice::coded_file_output(void)
 }
 void voice::pcm_file_load(void)
 {
-    //    QMessageBox::information(NULL, "SBC", tr("pcm_file_load! "),
-    //                             QMessageBox::Ok );
     QString fileout = QFileDialog::getOpenFileName(this, tr("加载文件"), "","*.pcm",0);
     if (!fileout.isNull())
     {
@@ -314,9 +342,6 @@ void voice::pcm_file_load(void)
 }
 void voice::pcm_file_output(void)
 {
-    //    QMessageBox::information(NULL, "SBC", tr("pcm_file_output! "),
-    //                             QMessageBox::Ok );
-
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.pcm;;*.wav",0);
     if (!fileout.isNull())
     {
@@ -383,7 +408,8 @@ void voice::codec_2_pcm(void)
     if (1)//((ret > 7)||(ret == 0))
     {
         drawAudioPlot(pPcmOutFilePath->text());
-        audioplay(pPcmOutFilePath->text());
+        //audioplay(pPcmOutFilePath->text());
+        audio_start_play(pPcmOutFilePath->text());
     }
     else
     {
@@ -391,7 +417,6 @@ void voice::codec_2_pcm(void)
                                  QMessageBox::Ok );
     }
 
-    //qDebug()<<"result = "<<ret<<"\n";
 }
 
 void voice::drawAudioPlot(QString filename)
@@ -483,9 +508,14 @@ void voice::audioplay(QString filepath)
 }
 void voice::voice_setting_ok_clicked()
 {
-
-    //audio_start_play("./AudioFile.pcm");
-
+    if (pVSetting->getVoiceChalMode() == 0)
+    {
+        pPlotR->setVisible(false);
+    }
+    else
+    {
+        pPlotR->setVisible(true);
+    }
 
 }
 
