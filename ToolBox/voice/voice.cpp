@@ -259,9 +259,9 @@ void voice::show_region_context_menu(QMouseEvent *event)
         QAction *pClear = contextMenu.addAction("Clear Data");
         QAction *pSuspend;
         if (audio->state() == QAudio::SuspendedState)
-            pSuspend = contextMenu.addAction("Suspend Audio");
-        else
             pSuspend = contextMenu.addAction("Resume Audio");
+        else
+            pSuspend = contextMenu.addAction("Suspend Audio");
         QAction *pStop = contextMenu.addAction("Stop Audio");
         contextMenu.addAction("...");
 
@@ -273,7 +273,7 @@ void voice::show_region_context_menu(QMouseEvent *event)
         if (selectaction == pRescale)
         {
             pPlotL->graph(0)->rescaleAxes();
-            pPlotL->replot();
+            pPlotL->replot();//pPlotL->graph(0)->data().data()->remove(100*1024);
             pPlotR->graph(0)->rescaleAxes();
             pPlotR->replot();
         }
@@ -351,6 +351,15 @@ void voice::pcm_file_output(void)
 
 void voice::pcm_2_sbc(void)
 {
+//    static quint32 offset = 0;offset += 60*1024;
+//    pPlotL->graph(0)->data().data()->removeBefore(offset);
+//    pPlotL->graph(0)->rescaleAxes();
+//    pPlotL->replot();
+//    pPlotR->graph(0)->data().data()->removeBefore(offset);
+//    pPlotR->graph(0)->rescaleAxes();
+//    pPlotR->replot();
+
+
     if ((pPcmInFilePath->text() == "")||(pPcmInFilePath == NULL))
         return;
 
@@ -481,7 +490,6 @@ void voice::drawAudioPlot(QString filename)
             i0 = (((i0<<8) )| (arr[index+2] & 0xff));
             pPlotR->graph(0)->addData(index, i0);
         }
-
         pPlotL->graph(0)->rescaleAxes();
         pPlotL->replot();
         pPlotR->graph(0)->rescaleAxes();

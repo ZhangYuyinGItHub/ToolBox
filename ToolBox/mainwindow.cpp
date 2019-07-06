@@ -21,7 +21,25 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+    this->setStyleSheet("background-color: rgb(107, 147, 255)");
+//    this->setStyleSheet("QPushButton{background-color: rgb(107, 147, 255);"
+//                        "board-radius: 2px;}"
+//                        "QPushButton:hover {background-color: lime;}");
+
     QTabWidget *pTabWidget = new QTabWidget();
+    pTabWidget->setStyleSheet("QWidget{background-color: rgb(233, 233, 233);"
+                              "font: 10.5pt}"
+                              "QPushButton{background-color: rgb(199, 199, 199);"
+                              "border-radius: 3px;"
+                              "min-height: 23px; "
+                              "min-width: 100px;  "
+                              "font: 10.5pt;"
+                              "/*border: 1px groove gray;*/}"
+                              "QPushButton:hover {background-color: lime;}"
+                              "QPushButton:pressed{background-color:rgb(255, 170, 0);"
+                                                  "border-style: inset;}"
+                              "QLineEdit{background-color: rgb(255, 255, 255)};");
+
 
     //pPacket->show();
     Hex2Txt* pHex2Tex = new Hex2Txt();
