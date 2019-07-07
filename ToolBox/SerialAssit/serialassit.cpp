@@ -31,9 +31,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     /*1. 串口参数设置*/
     pComNumLabel = new QLabel(tr("端口号："));
-    pComNum = new QComboBox();
-    pComRefreshBtn = new QPushButton(tr("刷新"));
-    pComOpenBtn = new QPushButton(/*tr("打开串口")*/);
+    pComNum = new zComBox();
+    pComOpenBtn = new QPushButton(tr("打开串口"));
     pComBaudRateLabel = new QLabel(tr("波特率："));
     pComBaudRate = new QComboBox();
     //pRevTextEdit = new QPlainTextEdit();
@@ -58,11 +57,11 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pAudioPlay = new QPushButton(tr("播放语音"));
     pAudioSave = new QPushButton(tr("保存语音"));
 
-    connect(pComRefreshBtn,&QPushButton::released,this,comfresh);
     connect(pComOpenBtn,&QPushButton::released,this,comopen);
     connect(pAudioPlay,&QPushButton::released,this,audioplay);
     connect(pAudioSave,&QPushButton::released,this,audiosave);
     connect(pSendBtn,&QPushButton::released,this,comsend);
+    connect(pComNum, &zComBox::combox_clicked, this, com_num_brush);
 
     /*search for serial port*/
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -105,24 +104,24 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 
     /* 页面布局设置 */
     QHBoxLayout *pLayout01 = new QHBoxLayout();
-    pLayout01->addWidget(pComRefreshBtn);
+    pLayout01->addWidget(pComOpenBtn);
     pLayout01->addWidget(pComNum);
     pLayout01->addWidget(pComBaudRate);
-    pLayout01->addWidget(pComOpenBtn);
-    pComOpenBtn->setStyleSheet("QPushButton{"
-                               "background-color: rgb(233, 233, 233, 0);"
-                               "background-image:url(:/new/prefix2/Image/icon1.png);"//设置按钮背景图片
-                               "background-repeat:repeat-xy;" //设置按钮的背景图片的重复规则，x方向y方向，xy方向
-                               "background-position:Center;" //设定背景图片在按钮中的位置,按左对齐Left，右Right，中间Center，上Top，底部Bottom
-                               "background-attachment:fixed;"
-                               "min-height: 24px; "
-                               "min-width: 24px;  "
-                               "max-height: 24px; "
-                               "max-width: 24px;  "
-                               "border-radius: 10px;"
-                               "background-clip:padding}"
-                               "QPushButton:hover{background-color:rgb(0, 255, 0);"
-                               "background-image:url(:/new/prefix2/Image/icon2.png);}");
+
+//    pComOpenBtn->setStyleSheet("QPushButton{"
+//                               "background-color: rgb(233, 233, 233, 0);"
+//                               "background-image:url(:/new/prefix2/Image/icon1.png);"//设置按钮背景图片
+//                               "background-repeat:repeat-xy;" //设置按钮的背景图片的重复规则，x方向y方向，xy方向
+//                               "background-position:Center;" //设定背景图片在按钮中的位置,按左对齐Left，右Right，中间Center，上Top，底部Bottom
+//                               "background-attachment:fixed;"
+//                               "min-height: 24px; "
+//                               "min-width: 24px;  "
+//                               "max-height: 24px; "
+//                               "max-width: 24px;  "
+//                               "border-radius: 10px;"
+//                               "background-clip:padding}"
+//                               "QPushButton:hover{background-color:rgb(0, 255, 0);"
+//                               "background-image:url(:/new/prefix2/Image/icon2.png);}");
     pLayout01->addWidget(pSendBtn);
     pLayout01->addWidget(pSendEdit);
     //pLayout01->addStretch(1);
@@ -151,6 +150,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout04->addWidget(pSendUart2M, 0, Qt::AlignRight|Qt::AlignTop);
     pLayout04->addStretch(1);
 }
+
 void SerialAssit::voice_cmd_handler()
 {
     QObject *object = QObject::sender();
@@ -260,7 +260,6 @@ void SerialAssit::comopen()
         pComNum->setEnabled(false);
         pComBaudRate->setEnabled(false);
         pComOpenBtn->setText(tr("关闭串口"));
-        pComRefreshBtn->setEnabled(false);
 
         pSerialPortThread->setBaudRate(pComBaudRate->currentText());
         pSerialPortThread->setComNum(pComNum->currentText());
@@ -281,7 +280,6 @@ void SerialAssit::comopen()
     {
         pComNum->setEnabled(true);
         pComBaudRate->setEnabled(true);
-        pComRefreshBtn->setEnabled(true);
         //pSerialPort->close();
         pComOpenBtn->setText(tr("打开串口"));
 
@@ -405,9 +403,9 @@ QByteArray SerialAssit::QString2Hex(QString str)
  * @brief SerialAssit::comfresh
  *        刷新可以使用的串口号
  */
-void SerialAssit::comfresh()
+void SerialAssit::com_num_brush()
 {
-
+    //qDebug() << "com_num_brush";
     pComNum->clear();
     QStringList pComList;// = new QStringList();
     foreach(const QSerialPortInfo &info, QSerialPortInfo::availablePorts())

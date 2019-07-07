@@ -18,7 +18,7 @@
 #include <QFile>
 #include <QLineEdit>
 #include "win_qextserialport.h"
-
+#include "zcombox.h"
 
 const QString voice_cmd_2M = QString("87 10 11 01 E4 E1 ");
 const QString voice_cmd_start = QString("87 05 11 73 75");
@@ -32,10 +32,9 @@ public:
 
     SerialPortThread *pSerialPortThread;
     QLabel *pComNumLabel;
-    QComboBox *pComNum;
+    zComBox *pComNum;
     QLabel *pComBaudRateLabel;
     QComboBox *pComBaudRate;
-    QPushButton *pComRefreshBtn;
     QPushButton *pComOpenBtn;
     QPushButton *pAudioPlay;
     QPushButton *pAudioSave;
@@ -69,7 +68,6 @@ protected:
 signals:
 
 public slots:
-    void comfresh(void);
     void comopen(void);
     void audioplay(void);
     void audiosave(void);
@@ -77,6 +75,7 @@ public slots:
     void voice_cmd_handler(void);
 
     void serialDataRev();
+    void com_num_brush();
 };
 
 #endif // SERIALASSIT_H

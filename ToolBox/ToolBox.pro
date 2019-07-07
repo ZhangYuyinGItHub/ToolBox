@@ -43,7 +43,8 @@ SOURCES += \
     SerialAssit/audiodevice.cpp \
     SerialAssit/qextserialbase.cpp \
     SerialAssit/qextserialport.cpp \
-    SerialAssit/win_qextserialport.cpp
+    SerialAssit/win_qextserialport.cpp \
+    SerialAssit/zcombox.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -63,7 +64,8 @@ HEADERS += \
     SerialAssit/audiodevice.h \
     SerialAssit/qextserialbase.h \
     SerialAssit/qextserialport.h \
-    SerialAssit/win_qextserialport.h
+    SerialAssit/win_qextserialport.h \
+    SerialAssit/zcombox.h
 
 FORMS += \
     about/about.ui
