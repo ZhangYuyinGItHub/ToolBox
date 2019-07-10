@@ -12,7 +12,7 @@
 #include <QThread>
 #include "serialportthread.h"
 #include "audiodevice.h"
-
+#include "database.h"
 
 
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
@@ -229,13 +229,31 @@ void SerialAssit::show_region_context_menu(QMouseEvent *event)
 void SerialAssit::voice_setting_handler()
 {
     qDebug()<<"voice_setting";
+    mpDb = new DataBase();//ui->mDataView
+    mpDb->InitDataBase();//初始化数据库
+    //mpDb->InitDeviceView(ui->mDeviceView);//初始化数据记录的模型视图
+
+    mCmdTable = new QTableView(this);
+
+
+    mpDb->InitDeviceView(mCmdTable);//初始化数据记录的模型视图
+
+        mpDb->insertDeviceRecord(mCmdTable,
+                                 "131a008",
+                                 QObject::tr("车间1"),
+                                 QObject::tr("区域1"),
+                                 "50",
+                                 "20",
+                                 QObject::tr("发电机"));
+
+        mCmdTable->show();
 }
 
 void SerialAssit::voice_cmd_handler()
 {
     if (!pSerialPortThread->getSerialPortStatus())
     {
-        QMessageBox::information(NULL, "Tip", tr("串口没有打开"),
+        QMessageBox::information(NULL, "Info", tr("串口没有打开"),
                                  QMessageBox::Ok );
         return;
     }

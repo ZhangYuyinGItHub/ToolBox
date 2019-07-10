@@ -19,6 +19,7 @@
 #include <QLineEdit>
 #include "win_qextserialport.h"
 #include "zcombox.h"
+#include "database.h"
 
 const QString voice_cmd_2M = QString("87 10 11 01 E4 E1 ");
 const QString voice_cmd_start = QString("87 05 11 73 75");
@@ -59,6 +60,12 @@ public:
         VOICE_CMD_STOP = 2,
         VOICE_SETTING = 3,
     };
+
+    /*
+     *数据页--数据库对象
+     */
+    DataBase *mpDb;
+    QTableView *mCmdTable;
 
 public:
     QByteArray QString2Hex(QString str);

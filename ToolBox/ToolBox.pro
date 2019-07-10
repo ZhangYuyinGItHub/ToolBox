@@ -7,6 +7,7 @@
 QT       += core gui
 QT       += widgets printsupport
 QT       += multimedia
+QT       += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
      QT += serialport
@@ -44,7 +45,8 @@ SOURCES += \
     SerialAssit/qextserialbase.cpp \
     SerialAssit/qextserialport.cpp \
     SerialAssit/win_qextserialport.cpp \
-    SerialAssit/zcombox.cpp
+    SerialAssit/zcombox.cpp \
+    SerialAssit/database.cpp
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -65,7 +67,8 @@ HEADERS += \
     SerialAssit/qextserialbase.h \
     SerialAssit/qextserialport.h \
     SerialAssit/win_qextserialport.h \
-    SerialAssit/zcombox.h
+    SerialAssit/zcombox.h \
+    SerialAssit/database.h
 
 FORMS += \
     about/about.ui
