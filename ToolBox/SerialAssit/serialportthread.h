@@ -33,6 +33,7 @@ public:
     quint32 getCurrentRevLength(void);
     QByteArray getRevDataArr(int start, int end);
     QString ByteArrayToString(QByteArray &ba);
+    boolean getSerialPortStatus(void);
 
 signals:
     void serialDataReady();

@@ -5,10 +5,12 @@
     </qresource>
     <qresource prefix="/new/prefix2">
         <file>Image/bee.png</file>
-        <file>Image/icon1.png</file>
-        <file>Image/icon2.png</file>
-        <file>Image/logo.png</file>
         <file>Image/logo.ico</file>
         <file>Image/icon3.png</file>
+        <file>Image/setting.png</file>
+        <file>Image/start.png</file>
+        <file>Image/stop.png</file>
+        <file>Image/save.png</file>
+        <file>Image/logo.png</file>
     </qresource>
 </RCC>

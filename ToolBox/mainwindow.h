@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "./patcket/packet.h"
+//#include "./patcket/packet.h"
 
 namespace Ui {
 class MainWindow;

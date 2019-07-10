@@ -201,3 +201,8 @@ void SerialPortThread::setBaudRate(QString baudrate)
 {
     gComBaudRate = baudrate;
 }
+
+boolean SerialPortThread::getSerialPortStatus(void)
+{
+    return myCom->isOpen();
+}

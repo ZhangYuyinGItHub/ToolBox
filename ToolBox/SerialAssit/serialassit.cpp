@@ -17,17 +17,17 @@
 
 SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
 {
-//    this->setStyleSheet("QWidget{background-color: rgb(233, 233, 233);"
-//                      "font: 11pt}"
-//                      "QPushButton{background-color: rgb(199, 199, 199);"
-//                      "border-radius: 3px;"
-//                      "min-height: 18px; "
-//                      "min-width: 80px;  "
-//                      "font: 11pt;"
-//                      "/*border: 1px groove gray;*/}"
-//                      "QPushButton:hover {background-color: lime;}"
-//                      "QPushButton:pressed{background-color:rgb(255, 170, 170);"
-//                                          "border-style: inset;}");
+    //    this->setStyleSheet("QWidget{background-color: rgb(233, 233, 233);"
+    //                      "font: 11pt}"
+    //                      "QPushButton{background-color: rgb(199, 199, 199);"
+    //                      "border-radius: 3px;"
+    //                      "min-height: 18px; "
+    //                      "min-width: 80px;  "
+    //                      "font: 11pt;"
+    //                      "/*border: 1px groove gray;*/}"
+    //                      "QPushButton:hover {background-color: lime;}"
+    //                      "QPushButton:pressed{background-color:rgb(255, 170, 170);"
+    //                                          "border-style: inset;}");
 
     /*1. 串口参数设置*/
     pComNumLabel = new QLabel(tr("端口号："));
@@ -44,15 +44,21 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     QRegExp regExp("[a-fA-F0-9 ]{100}");
     pSendEdit->setValidator(new QRegExpValidator(regExp, this));
     pSendEdit->setValidator(new QRegExpValidator(regExp, this));
-    pSendStartVoice = new QPushButton("开始语音");
+    pSendStartVoice = new QPushButton(/*"开始语音"*/);
+    pSendStartVoice->setIcon(QIcon(":/new/prefix2/Image/start.png"));
     pSendStartVoice->setObjectName(QString::number(VOICE_CMD_START, 10));
-    pSendStopVoice = new QPushButton("停止语音");
+    pSendStopVoice = new QPushButton(/*"停止语音"*/);
+    pSendStopVoice->setIcon(QIcon(":/new/prefix2/Image/stop.png"));
     pSendStopVoice->setObjectName(QString::number(VOICE_CMD_STOP, 10));
+    pSendStopVoice->setVisible(false);
     pSendUart2M  = new QPushButton("2M");
     pSendUart2M->setObjectName(QString::number(VOICE_CMD_2M, 10));
+    pSettingBtn = new QPushButton();
+    pSettingBtn->setIcon(QIcon(":/new/prefix2/Image/setting.png"));
     connect(pSendStartVoice, &QPushButton::released, this, voice_cmd_handler);
     connect(pSendStopVoice, &QPushButton::released, this, voice_cmd_handler);
     connect(pSendUart2M, &QPushButton::released, this, voice_cmd_handler);
+    connect(pSettingBtn, &QPushButton::released, this, voice_setting_handler);
 
     pAudioPlay = new QPushButton(tr("播放语音"));
     pAudioSave = new QPushButton(tr("保存语音"));
@@ -102,26 +108,28 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pPlot->addGraph();
     pPlot->graph(0)->setPen(QPen(Qt::blue));
 
+    connect(pPlot, &QCustomPlot::mousePress, this, &SerialAssit::show_region_context_menu);
+
     /* 页面布局设置 */
     QHBoxLayout *pLayout01 = new QHBoxLayout();
     pLayout01->addWidget(pComOpenBtn);
     pLayout01->addWidget(pComNum);
     pLayout01->addWidget(pComBaudRate);
 
-//    pComOpenBtn->setStyleSheet("QPushButton{"
-//                               "background-color: rgb(233, 233, 233, 0);"
-//                               "background-image:url(:/new/prefix2/Image/icon1.png);"//设置按钮背景图片
-//                               "background-repeat:repeat-xy;" //设置按钮的背景图片的重复规则，x方向y方向，xy方向
-//                               "background-position:Center;" //设定背景图片在按钮中的位置,按左对齐Left，右Right，中间Center，上Top，底部Bottom
-//                               "background-attachment:fixed;"
-//                               "min-height: 24px; "
-//                               "min-width: 24px;  "
-//                               "max-height: 24px; "
-//                               "max-width: 24px;  "
-//                               "border-radius: 10px;"
-//                               "background-clip:padding}"
-//                               "QPushButton:hover{background-color:rgb(0, 255, 0);"
-//                               "background-image:url(:/new/prefix2/Image/icon2.png);}");
+    //    pComOpenBtn->setStyleSheet("QPushButton{"
+    //                               "background-color: rgb(233, 233, 233, 0);"
+    //                               "background-image:url(:/new/prefix2/Image/icon1.png);"//设置按钮背景图片
+    //                               "background-repeat:repeat-xy;" //设置按钮的背景图片的重复规则，x方向y方向，xy方向
+    //                               "background-position:Center;" //设定背景图片在按钮中的位置,按左对齐Left，右Right，中间Center，上Top，底部Bottom
+    //                               "background-attachment:fixed;"
+    //                               "min-height: 24px; "
+    //                               "min-width: 24px;  "
+    //                               "max-height: 24px; "
+    //                               "max-width: 24px;  "
+    //                               "border-radius: 10px;"
+    //                               "background-clip:padding}"
+    //                               "QPushButton:hover{background-color:rgb(0, 255, 0);"
+    //                               "background-image:url(:/new/prefix2/Image/icon2.png);}");
     pLayout01->addWidget(pSendBtn);
     pLayout01->addWidget(pSendEdit);
     //pLayout01->addStretch(1);
@@ -140,19 +148,98 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout02->addLayout(pLayout01);
     //pLayout02->addLayout(pLayout03);
 
+
+
+    QWidget *p = new QWidget();
+    QHBoxLayout *pLayout05 = new QHBoxLayout(p);
+    pLayout05->addStretch(1);
+    pLayout05->addWidget(pSendStartVoice/*, 0, Qt::AlignRight|Qt::AlignTop*/);
+    pLayout05->addWidget(pSendStopVoice/*, 0, Qt::AlignRight|Qt::AlignTop*/);
+    pLayout05->addWidget(pSendUart2M/*, 0, Qt::AlignRight|Qt::AlignTop*/);
+    pLayout05->addWidget(pSettingBtn);
+
+    pLayout05->addStretch(1);
+
     QVBoxLayout *pLayout04 = new QVBoxLayout(pPlot);
-    pLayout04->addSpacing(13);
+    //pLayout04->addSpacing(13);
     //pLayout04->addWidget(pComOpenBtn, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addWidget(pAudioPlay, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addWidget(pAudioSave, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addWidget(pSendStartVoice, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addWidget(pSendStopVoice, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addWidget(pSendUart2M, 0, Qt::AlignRight|Qt::AlignTop);
-    pLayout04->addStretch(1);
+    //pLayout04->addWidget(pAudioPlay, 0, Qt::AlignRight|Qt::AlignTop);
+    //pLayout04->addWidget(pAudioSave, 0, Qt::AlignRight|Qt::AlignTop);
+
+    //pLayout04->addStretch(1);
+    p->setStyleSheet("QWidget{"
+                     "background-color: rgb(233, 233, 233, 0);}"
+                     "QPushButton{"
+                     "background-color: rgb(233, 233, 233, 255);"
+                     "border-radius: 5px;"
+                     "min-height: 40px; "
+                     "min-width: 40px; }"
+                     "QPushButton:hover{"
+                     "background-color: rgb(150, 180, 150, 255)}"
+                     "QPushButton:pressed{"
+                     "background-color:rgb(155, 100, 100);"
+                     "border-style: inset;}");
+    pLayout04->addWidget(p, 0, Qt::AlignBottom|Qt::AlignCenter);
+    pLayout04->addSpacing(10);
+    //pLayout04->addStretch(1);
+}
+/*
+ * @brief 曲线右键菜单
+*/
+void SerialAssit::show_region_context_menu(QMouseEvent *event)
+{
+    if(event->button()==Qt::RightButton)
+    {
+        QMenu contextMenu(pPlot);
+
+        QAction *pRescale = contextMenu.addAction("RescaleAxes");
+        pRescale->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
+        QAction *pRepaly = contextMenu.addAction("Replay");
+        pRepaly->setIcon(QIcon(":/new/prefix1/Image/replay_icon.png"));
+        QAction *pSave = contextMenu.addAction("save");
+        pSave->setIcon(QIcon(":/new/prefix2/Image/save.png"));
+
+        /*
+         *step2--事件循环
+         */
+        QAction *selectaction = contextMenu.exec(event->globalPos());//事件循环
+
+        if (selectaction == pRescale)
+        {
+            pPlot->graph(0)->rescaleAxes();
+            pPlot->replot();//pPlot->graph(0)->data().data()->remove(100*1024);
+            pPlot->graph(0)->rescaleAxes();
+            pPlot->replot();
+        }
+        else if (selectaction == pRepaly)
+        {
+            //audioplay(pAudioInputFile->fileName());
+            audioplay();
+        }
+        else if (selectaction == pSave)
+        {
+            audiosave();
+        }
+
+        //contextMenu.exec(QWidget::pos());
+        //不加此句，自定义QGraphicsItem子类无法接收右键事件
+        //QWidget::contextMenuEvent(event);
+    }
+}
+void SerialAssit::voice_setting_handler()
+{
+    qDebug()<<"voice_setting";
 }
 
 void SerialAssit::voice_cmd_handler()
 {
+    if (!pSerialPortThread->getSerialPortStatus())
+    {
+        QMessageBox::information(NULL, "Tip", tr("串口没有打开"),
+                                 QMessageBox::Ok );
+        return;
+    }
+
     QObject *object = QObject::sender();
     QPushButton *push_button = qobject_cast<QPushButton *>(object);
     if (push_button)
@@ -167,14 +254,24 @@ void SerialAssit::voice_cmd_handler()
             break;
         case VOICE_CMD_START:
             cmd =  QString2Hex(voice_cmd_start);
+
+            pSendStartVoice->setVisible(false);
+            pSendStopVoice->setVisible(true);
+
             break;
         case VOICE_CMD_STOP:
             cmd =  QString2Hex(voice_cmd_stop);
+            pSendStartVoice->setVisible(true);
+            pSendStopVoice->setVisible(false);
             break;
         default:break;
         }
+        //qDebug()<<"setting button: index = "<< index;
 
-        pSerialPortThread->comwrite(cmd);
+        if (!cmd.isNull())
+        {
+            pSerialPortThread->comwrite(cmd);
+        }
     }
 }
 

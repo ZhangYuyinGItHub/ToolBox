@@ -45,6 +45,7 @@ public:
     QPushButton *pSendUart2M;
     QPushButton *pSendStartVoice;
     QPushButton *pSendStopVoice;
+    QPushButton *pSettingBtn;
 
     QCustomPlot *pPlot;
 
@@ -53,9 +54,10 @@ public:
 
     enum
     {
-        VOICE_CMD_2M,
-        VOICE_CMD_START,
-        VOICE_CMD_STOP,
+        VOICE_CMD_2M = 0,
+        VOICE_CMD_START = 1,
+        VOICE_CMD_STOP = 2,
+        VOICE_SETTING = 3,
     };
 
 public:
@@ -73,9 +75,12 @@ public slots:
     void audiosave(void);
     void comsend(void);
     void voice_cmd_handler(void);
+    void voice_setting_handler(void);
 
     void serialDataRev();
     void com_num_brush();
+
+    void show_region_context_menu(QMouseEvent *event);
 };
 
 #endif // SERIALASSIT_H

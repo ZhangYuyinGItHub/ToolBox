@@ -48,8 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
     Txt2Hex *pTxt2Hex = new Txt2Hex();
     pTabWidget->insertTab(1, pTxt2Hex, "Txt2Hex");
 
-    Packet * pPacket = new Packet();
-    pTabWidget->insertTab(2, pPacket, "Packet");
+//    Packet * pPacket = new Packet();
+//    pTabWidget->insertTab(2, pPacket, "Packet");
 
     SerialAssit *pSerialAssit = new SerialAssit();
     pTabWidget->insertTab(3, pSerialAssit, "SerialAssit");
