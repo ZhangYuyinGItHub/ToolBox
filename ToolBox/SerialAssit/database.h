@@ -1,7 +1,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-#include <QMainWindow>
+#include <QWidget>
 #include <QTableView>
 #include <QSqlQueryModel>
 #include <QSqlQuery>
@@ -13,14 +13,14 @@
 #include <QDateTime>
 #include <QHeaderView>
 
-class DataBase : public QMainWindow
+class DataBase : public QWidget
 {
     Q_OBJECT
 public:
-    explicit DataBase(QTableView *parent = 0);
+    explicit DataBase(QWidget *parent = 0);
     
 public://成员变量
-    //QTableView *mpView;
+    QTableView *mpView;
     QSqlQueryModel *mpModel;
     //QSqlDatabase db;
     //MProgressBar *mpProgressBar;
@@ -29,7 +29,7 @@ public://成员变量
 
 public://成员函数
     int InitDataBase(void);
-    void InitDeviceView(QTableView *mpDeviceView);//初始化设备视图
+    void InitDeviceView();//初始化设备视图
     void InitDataView(QTableView *mpDataView);//初始化温度记录视图
 
     int GetTableCount();
@@ -47,11 +47,10 @@ public://成员函数
                         int channel);
 
     long getRecordNum(QString tablename);//获取数据库的record数目
-    bool insertRecord(QTableView *mpView,
-                      QString nodeId,
+    bool insertRecord(QString nodeId,
                       QString channel,
                       QString Tvalue,
-                      QDateTime time);
+                      QString time);
     void insertDeviceRecord(QTableView *mpDeviceView,
                                       QString deviceId,
                                       QString nodename,

@@ -1,12 +1,18 @@
 #include "database.h"
+#include "QHBoxLayout"
 
-DataBase::DataBase(QTableView *parent) :
-    QMainWindow(parent)
+DataBase::DataBase(QWidget *parent) :
+    QWidget(parent)
 {
-//    //数据列表视图
-//    mpView = parent;
-//    mpModel = new QSqlQueryModel(this);
-//    mpView->setModel(mpModel);
+    //this->parent = parent;
+    //数据列表视图
+    mpView = new QTableView();
+    mpModel = new QSqlQueryModel(this);
+    mpView->setModel(mpModel);
+
+    QHBoxLayout *pLayout01 = new QHBoxLayout(this);
+    pLayout01->addWidget(mpView);
+    this->setLayout(pLayout01);
 }
 /*
  *函数功能：创建数据库连接，初始化数据了视图，指定初始化的数据库表tableName
@@ -35,17 +41,17 @@ int DataBase::InitDataBase(void)
 /*
  *函数功能：初始化DeviceView,设备信息视图
  */
-void DataBase::InitDeviceView(QTableView *mpDeviceView)
+void DataBase::InitDeviceView()
 {
     //设备列表视图
     mpDeviceModel = new QSqlQueryModel(this);
-    mpDeviceView->setModel(mpDeviceModel);
+    mpView->setModel(mpDeviceModel);
 
-    mpDeviceView->setSelectionBehavior(QAbstractItemView::SelectRows);//每次选中一行
-    mpDeviceView->horizontalHeader()->setStretchLastSection(true);//最后一行的拉伸
-    mpDeviceView->setAlternatingRowColors(true);//行颜色交替显示
+    mpView->setSelectionBehavior(QAbstractItemView::SelectRows);//每次选中一行
+    mpView->horizontalHeader()->setStretchLastSection(true);//最后一行的拉伸
+    mpView->setAlternatingRowColors(true);//行颜色交替显示
 
-    mpDeviceModel->setQuery("select * from DeviceTable");
+    mpDeviceModel->setQuery("select * from MainTable");
 
     mpDeviceModel->setHeaderData(0,Qt::Horizontal,tr("ID"));
     mpDeviceModel->setHeaderData(1,Qt::Horizontal,tr("节点名称"));
@@ -219,7 +225,7 @@ int DataBase::createConnection()
     }
     QSqlQuery query(db1);
     //创建总的数据记录表
-    flag = query.exec(QString("create table cmd(ID varchar primary key," /*1--主键值，ID*/
+    flag = query.exec(QString("create table MainTable(ID varchar primary key," /*1--主键值，ID*/
                                             "Node varchar,"       /*2--CAN总线节点*/
                                             "Channel varchar,"        /*3--节点上的采集通道*/
                                             "value varchar,"      /*4--温度值*/
@@ -326,23 +332,23 @@ long DataBase::getRecordNum(QString tablename)
 /*
  *函数功能：往数据库MainTable表中插入一条记录
  */
-bool DataBase::insertRecord(QTableView *mpView,
+bool DataBase::insertRecord(
                   //int keyId,
                   QString nodeId,
                   QString channel,
                   QString Tvalue,
-                  QDateTime time)
+                  QString time)
 {
     QString KeyID;//QString::number(getRecordNum()+1,10);
-    QString mTime = time.toString("yyyy-MM-dd hh:mm:ss ddd");
+    QString mTime = time;//.toString("yyyy-MM-dd hh:mm:ss ddd");
     QString Node = nodeId;
 
     QString T;
     if(Tvalue.right(1)==QObject::tr("℃"))
         T = Tvalue;
     else
-        T = "";
-    KeyID = time.toString("yyyyMMddhhmmss");
+        T = "10";
+    KeyID = time;//.toString("yyyyMMddhhmmss");
     mpModel->setQuery(QString("insert into MainTable values('"+
                               KeyID+"','"+//ID
                               Node+"','"+       //节点,QString型，需要在SQL语句中添加''

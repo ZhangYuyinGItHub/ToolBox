@@ -65,7 +65,6 @@ public:
      *数据页--数据库对象
      */
     DataBase *mpDb;
-    QTableView *mCmdTable;
 
 public:
     QByteArray QString2Hex(QString str);
