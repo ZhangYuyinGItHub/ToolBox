@@ -12,12 +12,14 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QHeaderView>
+#include <QModelIndex>
+#include <QLineEdit>
 
-class DataBase : public QWidget
+class DataBase : public QDialog
 {
     Q_OBJECT
 public:
-    explicit DataBase(QWidget *parent = 0);
+    explicit DataBase(QDialog *parent = 0);
     
 public://成员变量
     QTableView *mpView;
@@ -26,6 +28,11 @@ public://成员变量
     //MProgressBar *mpProgressBar;
     //QProgressBar *mpProgressBar;
     QSqlQueryModel *mpDeviceModel;
+
+    QLineEdit* pName;
+    QLineEdit* pCmd;
+    QLineEdit* pNote;
+
 
 public://成员函数
     int InitDataBase(void);
@@ -47,10 +54,9 @@ public://成员函数
                         int channel);
 
     long getRecordNum(QString tablename);//获取数据库的record数目
-    bool insertRecord(QString nodeId,
-                      QString channel,
-                      QString Tvalue,
-                      QString time);
+    bool insertRecord(QString name,
+                      QString cmd,
+                      QString note);
     void insertDeviceRecord(QTableView *mpDeviceView,
                                       QString deviceId,
                                       QString nodename,
@@ -62,10 +68,15 @@ public://成员函数
     void updateDeviceView(QString deviceId);
     QSqlRecord getDeviceRecord(QString deviceId);
 
+    void nameSearch(QString time);
+
 signals:
     
 public slots:
-    
+    void cmd_doubleclicked(const QModelIndex &index);
+    void ok_btn_clicked();
+    void cancel_btn_clicked();
+    void update_btn_clicked();
 };
 
 #endif // DATABASE_H

@@ -231,26 +231,24 @@ void SerialAssit::voice_setting_handler()
     qDebug()<<"voice_setting";
     mpDb = new DataBase();//ui->mDataView
     mpDb->InitDataBase();//初始化数据库
-    //mpDb->InitDeviceView(ui->mDeviceView);//初始化数据记录的模型视图
 
     mpDb->InitDeviceView();//初始化数据记录的模型视图
 
-    mpDb->insertRecord("131a008",
-                       QObject::tr("车间1"),
-                       QObject::tr("区域1"),
-                       "2018");
+    mpDb->insertRecord("2M",
+                       "87 10 11 01 E4 E1",
+                       "none");
 
-    mpDb->insertRecord("131a009",
-                       QObject::tr("车间2"),
-                       QObject::tr("区域1"),
-                       "2019");
-    mpDb->insertRecord("131a010",
-                       QObject::tr("车间2"),
-                       QObject::tr("区域1"),
-                       "2010");
+    mpDb->insertRecord("vStart",
+                       "87 05 11 73 75",
+                       "none");
+    mpDb->insertRecord("vStop",
+                       "87 06 11 73 85",
+                       "none");
+
 
 
     mpDb->show();
+
 }
 
 void SerialAssit::voice_cmd_handler()

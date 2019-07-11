@@ -1,8 +1,11 @@
 #include "database.h"
+#include "QVBoxLayout"
 #include "QHBoxLayout"
+#include <QPushButton>
+#include <QIcon>
 
-DataBase::DataBase(QWidget *parent) :
-    QWidget(parent)
+DataBase::DataBase(QDialog *parent) :
+    QDialog(parent)
 {
     //this->parent = parent;
     //数据列表视图
@@ -10,10 +13,102 @@ DataBase::DataBase(QWidget *parent) :
     mpModel = new QSqlQueryModel(this);
     mpView->setModel(mpModel);
 
-    QHBoxLayout *pLayout01 = new QHBoxLayout(this);
+    QVBoxLayout *pLayout01 = new QVBoxLayout(this);
     pLayout01->addWidget(mpView);
-    this->setLayout(pLayout01);
+    //this->setLayout(pLayout01);
+
+    pName = new QLineEdit();
+    pCmd = new QLineEdit();
+    pNote = new QLineEdit();
+    QRegExp regExp("[a-fA-F0-9 ]{100}");
+    pName->setValidator(new QRegExpValidator(regExp, this));
+    pCmd->setValidator(new QRegExpValidator(regExp, this));
+    pNote->setValidator(new QRegExpValidator(regExp, this));
+
+    pLayout01->addWidget(pName);
+    pLayout01->addWidget(pCmd);
+    pLayout01->addWidget(pNote);
+
+    QHBoxLayout *pLayout02 = new QHBoxLayout();
+    QPushButton *pUpdateBtn = new QPushButton("更新");
+    QPushButton *pCancelBtn = new QPushButton("取消");
+    QPushButton *pOKBtn = new QPushButton("确定");
+
+    connect(pOKBtn, &QPushButton::released, this, &DataBase::ok_btn_clicked);
+    connect(pCancelBtn, &QPushButton::released, this, &DataBase::ok_btn_clicked);
+    connect(pUpdateBtn, &QPushButton::released, this, &DataBase::update_btn_clicked);
+
+    pLayout02->addStretch(1);
+    pLayout02->addWidget(pOKBtn);
+    pLayout02->addStretch(1);
+    pLayout02->addWidget(pCancelBtn);
+    pLayout02->addStretch(1);
+    pLayout02->addWidget(pUpdateBtn);
+    pLayout02->addStretch(1);
+
+    pLayout01->addLayout(pLayout02);
+
+    connect(mpView, &QTableView::doubleClicked, this, cmd_doubleclicked);
+
+    this->setWindowTitle("设置");
+    this->setWindowIcon(QIcon(":/new/prefix2/Image/setting.png"));
+    this->resize(370, 360);
+    this->setModal(true);
+    this->setStyleSheet("QWidget{background-color: rgb(233, 233, 233);"
+                        "font: 10.5pt}"
+                        "QPushButton{background-color: rgb(199, 199, 199);"
+                        "border-radius: 4px;"
+                        "min-height: 29px; "
+                        "min-width: 100px;  "
+                        "font: 10.5pt;"
+                        "/*border: 1px groove gray;*/}"
+                        "QPushButton:hover {background-color: lime;}"
+                        "QPushButton:pressed{background-color:rgb(255, 170, 0);"
+                        "border-style: inset;}"
+                        "QLineEdit{background-color: rgb(255, 255, 255)};");
 }
+
+void DataBase::cmd_doubleclicked(const QModelIndex &index)
+{
+//    qDebug()<<"double clicked,row = "<<index.row();
+//    qDebug()<<"column = "<<index.column();
+
+    pName->setText(getRecord(index.row()).value(0).toString());
+    pCmd->setText(getRecord(index.row()).value(1).toString());
+    pNote->setText(getRecord(index.row()).value(2).toString());
+}
+void DataBase::ok_btn_clicked()
+{
+
+}
+
+void DataBase::update_btn_clicked()
+{
+
+    QString str;
+//    str = "select * from MainTable where ID like '"+pName->text()+"%'";
+//    mpModel->setQuery(str);
+
+    str = "UPDATE MainTable SET note = '"+pNote->text()+"' WHERE ID = '"+pName->text()+"'";
+    mpModel->setQuery(str);
+
+
+    str = "UPDATE MainTable SET cmd = '"+pCmd->text()+"' WHERE ID = '"+pName->text()+"'";
+    mpModel->setQuery(str);
+
+
+    mpModel->setQuery("select * from MainTable");
+
+    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(1,180);//设置主键所在列的宽度
+    mpView->setColumnWidth(2,60);//设置主键所在列的宽度
+
+}
+void DataBase::cancel_btn_clicked()
+{
+    qDebug()<<"cancel_btn_clicked ";
+}
+
 /*
  *函数功能：创建数据库连接，初始化数据了视图，指定初始化的数据库表tableName
  *返回值： -1 创建数据库链接失败；
@@ -44,66 +139,31 @@ int DataBase::InitDataBase(void)
 void DataBase::InitDeviceView()
 {
     //设备列表视图
-    mpDeviceModel = new QSqlQueryModel(this);
-    mpView->setModel(mpDeviceModel);
+    //mpModel = new QSqlQueryModel(this);
+    //mpView->setModel(mpModel);
 
     mpView->setSelectionBehavior(QAbstractItemView::SelectRows);//每次选中一行
     mpView->horizontalHeader()->setStretchLastSection(true);//最后一行的拉伸
     mpView->setAlternatingRowColors(true);//行颜色交替显示
 
-    mpDeviceModel->setQuery("select * from MainTable");
-
-    mpDeviceModel->setHeaderData(0,Qt::Horizontal,tr("ID"));
-    mpDeviceModel->setHeaderData(1,Qt::Horizontal,tr("节点名称"));
-    mpDeviceModel->setHeaderData(2,Qt::Horizontal,tr("节点区域"));
-    mpDeviceModel->setHeaderData(3,Qt::Horizontal,tr("温度阀值"));
-    mpDeviceModel->setHeaderData(4,Qt::Horizontal,tr("采样间隔"));
-    mpDeviceModel->setHeaderData(5,Qt::Horizontal,tr("通道名称"));
-
-}
-/*
- *函数功能：初始化温度记录视图
- */
-void DataBase::InitDataView(QTableView *mpDataView)
-{
-    //数据列表视图
-    mpModel = new QSqlQueryModel(this);
-    mpDataView->setModel(mpModel);
-
-    mpDataView->setSelectionBehavior(QAbstractItemView::SelectRows);//每次选中一行
-    mpDataView->horizontalHeader()->setStretchLastSection(true);//最后一行的拉伸
-    mpDataView->setAlternatingRowColors(true);//行颜色交替显示
-
     mpModel->setQuery("select * from MainTable");
 
-    mpModel->setHeaderData(0,Qt::Horizontal,tr("ID"));
-    mpModel->setHeaderData(1,Qt::Horizontal,tr("节点"));
-    mpModel->setHeaderData(2,Qt::Horizontal,tr("采集通道"));
-    mpModel->setHeaderData(3,Qt::Horizontal,tr("温度值"));
-    mpModel->setHeaderData(4,Qt::Horizontal,tr("时间"));
+    mpModel->setHeaderData(0,Qt::Horizontal,tr("名称"));
+    mpModel->setHeaderData(1,Qt::Horizontal,tr("指令"));
+    mpModel->setHeaderData(2,Qt::Horizontal,tr("note"));
 
-    //考虑效率问题，这是QSqlQueryModel的默认只取255条的限制。
-    while(mpModel->canFetchMore())
-        mpModel->fetchMore();//不加此句的话滚动条将值滚动到256的位置
-    //将tableview的滚动条设置到底部
-    mpDataView->scrollToBottom();
-    //mpView->resizeColumnsToContents();//列的大小设为与内容相匹配
+    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(1,180);//设置主键所在列的宽度
+    mpView->setColumnWidth(2,60);//设置主键所在列的宽度
 
-    mpDataView->setColumnWidth(0,110);//设置主键所在列的宽度
-    mpDataView->setColumnWidth(1,45);//设置主键所在列的宽度
-    mpDataView->setColumnWidth(2,60);//设置主键所在列的宽度
-    mpDataView->setColumnWidth(3,60);//设置主键所在列的宽度
-    mpDataView->setColumnWidth(4,160);//设置主键所在列的宽度
-//    mpView->verticalScrollBar()
-//            ->setSliderPosition(mpModel->rowCount()-1);//QTableView的定位，定位到表格底部
-    mpDataView->show();//将结果集中的内容显示到视图中
+    mpView->show();
 }
-
-//获取数据库中数据的条数
-//返回的条数是最近一次根据数据库进行查询后的结果集的条数
+/*
+ * 获取数据库中数据的条数
+ *返回的条数是最近一次根据数据库进行查询后的结果集的条数
+*/
 int DataBase::GetTableCount()
 {
-    //mpModel->setQuery("select *");
     mpModel->query().last();
     return mpModel->query().at()+1;
 }
@@ -120,8 +180,8 @@ int DataBase::GetTableCount()
  *参考：http://blog.163.com/sdzhangyuyin@126/blog/static/138413748201461594738437/
  */
 int DataBase::ExportExcel(QString fileName,
-                            QString TableName,
-                            QString SheetName)
+                          QString TableName,
+                          QString SheetName)
 {
     {
         //首先创建页名，即sheet的名称
@@ -187,7 +247,7 @@ int DataBase::ExportExcel(QString fileName,
         {
             sSql =QString("INSERT INTO [%1] (").arg(sheetName);
             query.prepare( sSql+"[ID],[Node],[Channel],[value],[time])"
-                           "VALUES ([:ID],[:Node],[:Channel],[:value],[:time])");
+                                "VALUES ([:ID],[:Node],[:Channel],[:value],[:time])");
             query.bindValue(":ID", mpModel->record(i).value("ID").toString());
             query.bindValue(":Node", mpModel->record(i).value("Node").toString());
             query.bindValue(":Channel", mpModel->record(i).value("Channel").toString());
@@ -212,8 +272,7 @@ int DataBase::ExportExcel(QString fileName,
 int DataBase::createConnection()
 {
     int flag=0x00;
-    //QSqlDatabase::removeDatabase("QSQLITE");
-    QSqlDatabase db1 = QSqlDatabase::addDatabase("QSQLITE");//
+    QSqlDatabase db1 = QSqlDatabase::addDatabase("QSQLITE");
     db1.setDatabaseName("cmd_voice1.db");
     if(!db1.open())
     {
@@ -225,17 +284,28 @@ int DataBase::createConnection()
     }
     QSqlQuery query(db1);
     //创建总的数据记录表
-    flag = query.exec(QString("create table MainTable(ID varchar primary key," /*1--主键值，ID*/
-                                            "Node varchar,"       /*2--CAN总线节点*/
-                                            "Channel varchar,"        /*3--节点上的采集通道*/
-                                            "value varchar,"      /*4--温度值*/
-                                            "time varchar)"));    /*5--采集时间*/
+    flag = query.exec(QString("create table MainTable(ID varchar primary key," /*1--cmd name，ID*/
+                              "cmd varchar,"       /*2--指令*/
+                              "note varchar)"));    /*3--note*/
     if(!flag)
     {
         flag = 0x02;
     }
 
     return flag;
+}
+/*
+ *函数功能：按照命令name 进行查询
+ *函数参数：time 格式:yyyy-MM-dd ，QString类型
+ *返回数据：true，执行成功；
+ *        false，执行失败。
+ */
+void DataBase::nameSearch(QString time)
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where time like '"+time+"%'";
+    mpModel->setQuery(str);
 }
 /*
  *函数功能：数据库的查询，按照时间查询
@@ -286,8 +356,8 @@ void DataBase::ScreenDataBase()
  *函数功能：按照时间，节点，通道来查询
  */
 void DataBase::timeNodeSearch(QString time,
-                    QString node,
-                    int channel)
+                              QString node,
+                              int channel)
 {
     QString str;
     if(channel)
@@ -333,36 +403,25 @@ long DataBase::getRecordNum(QString tablename)
  *函数功能：往数据库MainTable表中插入一条记录
  */
 bool DataBase::insertRecord(
-                  //int keyId,
-                  QString nodeId,
-                  QString channel,
-                  QString Tvalue,
-                  QString time)
+        //int keyId,
+        QString name,
+        QString cmd,
+        QString note)
 {
     QString KeyID;//QString::number(getRecordNum()+1,10);
-    QString mTime = time;//.toString("yyyy-MM-dd hh:mm:ss ddd");
-    QString Node = nodeId;
+    QString Node = cmd;
 
-    QString T;
-    if(Tvalue.right(1)==QObject::tr("℃"))
-        T = Tvalue;
-    else
-        T = "10";
-    KeyID = time;//.toString("yyyyMMddhhmmss");
+    KeyID = name;//.toString("yyyyMMddhhmmss");
     mpModel->setQuery(QString("insert into MainTable values('"+
                               KeyID+"','"+//ID
                               Node+"','"+       //节点,QString型，需要在SQL语句中添加''
-                              channel+"','"+//采集点,int型不用加''
-                              T+"'"+",'"+//温度值
-                              mTime+"')"));//时间
+                              note+"')"));//时间
 
     mpModel->setQuery("select * from MainTable");
 
-    mpView->setColumnWidth(0,110);//设置主键所在列的宽度
-    mpView->setColumnWidth(1,45);//设置主键所在列的宽度
+    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(1,180);//设置主键所在列的宽度
     mpView->setColumnWidth(2,60);//设置主键所在列的宽度
-    mpView->setColumnWidth(3,60);//设置主键所在列的宽度
-    mpView->setColumnWidth(4,160);//设置主键所在列的宽度
     mpView->verticalScrollBar()
             ->setSliderPosition(mpModel->rowCount());//QTableView的定位，定位到表格底部
     //考虑效率问题，这是QSqlQueryModel的默认只取255条的限制。
@@ -437,12 +496,12 @@ void DataBase::insertDeviceRecord(QSqlRecord mRecord)
                             mRecord.value(0).toString()+"'");
     //插入新的记录
     mpDeviceModel->setQuery(QString("insert into DeviceTable values('"+
-                            mRecord.value(0).toString()+"','"+/*1，设备ID*/
-                            mRecord.value(1).toString()+"','"+/*2，设备名称*/
-                            mRecord.value(2).toString()+"','"+/*3，设备所在区域*/
-                            alertTvalue1+"','"+/*4，温度阀值*/
-                            sampleinterval1+"','"+/*5，采样间隔*/
-                            mRecord.value(5).toString()+"')"));/*6，通道名称*/
+                                    mRecord.value(0).toString()+"','"+/*1，设备ID*/
+                                    mRecord.value(1).toString()+"','"+/*2，设备名称*/
+                                    mRecord.value(2).toString()+"','"+/*3，设备所在区域*/
+                                    alertTvalue1+"','"+/*4，温度阀值*/
+                                    sampleinterval1+"','"+/*5，采样间隔*/
+                                    mRecord.value(5).toString()+"')"));/*6，通道名称*/
     mpDeviceModel->setQuery("select * from DeviceTable");
 }
 /*
@@ -471,17 +530,17 @@ QSqlRecord DataBase::getDeviceRecord(QString deviceId)
 void DataBase::updateDeviceView(QString deviceId)//QTableView *mpDeviceView
 {
     //mpDeviceView = mpDeviceView;
-//    long l = getRecordNum("DeviceTable");
-//    for(long i=0;i<l;i++)
-//    {
-//        qDebug()<<mpDeviceModel->record(i).value(0).toString();
-//    }
+    //    long l = getRecordNum("DeviceTable");
+    //    for(long i=0;i<l;i++)
+    //    {
+    //        qDebug()<<mpDeviceModel->record(i).value(0).toString();
+    //    }
 
     mpDeviceModel->setQuery(
                 QString("select * from DeviceTable where DeviceId='131a008'"));
-            //获取指定deviceId的记录
-            QSqlRecord r = mpDeviceModel->record(0);
-            qDebug()<<r;
+    //获取指定deviceId的记录
+    QSqlRecord r = mpDeviceModel->record(0);
+    qDebug()<<r;
 }
 
 
