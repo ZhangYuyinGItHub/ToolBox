@@ -6,7 +6,9 @@
 #include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QScrollBar>
+#if DEBUG_EN
 #include <QDebug>
+#endif
 #include <QSqlRecord>
 //#include "mprogressbar.h"
 #include <QMessageBox>
@@ -20,14 +22,11 @@ class DataBase : public QDialog
     Q_OBJECT
 public:
     explicit DataBase(QDialog *parent = 0);
+    ~DataBase();
     
 public://成员变量
     QTableView *mpView;
     QSqlQueryModel *mpModel;
-    //QSqlDatabase db;
-    //MProgressBar *mpProgressBar;
-    //QProgressBar *mpProgressBar;
-    QSqlQueryModel *mpDeviceModel;
 
     QLineEdit* pName;
     QLineEdit* pCmd;
@@ -69,9 +68,12 @@ public://成员函数
     QSqlRecord getDeviceRecord(QString deviceId);
 
     void nameSearch(QString time);
+    QString getVoice2MCmd();
+    QString getVoiceStartCmd();
+    QString getVoiceStopCmd();
 
 signals:
-    
+    void ok_pressed();
 public slots:
     void cmd_doubleclicked(const QModelIndex &index);
     void ok_btn_clicked();

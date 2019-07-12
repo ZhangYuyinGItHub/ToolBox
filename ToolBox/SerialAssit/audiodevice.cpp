@@ -1,5 +1,5 @@
 #include "audiodevice.h"
-#include <QDebug>
+//#include <QDebug>
 
 audiodevice::audiodevice(QByteArray pcm) : data_pcm(pcm)
 {

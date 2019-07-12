@@ -20,10 +20,11 @@ DataBase::DataBase(QDialog *parent) :
     pName = new QLineEdit();
     pCmd = new QLineEdit();
     pNote = new QLineEdit();
-    QRegExp regExp("[a-fA-F0-9 ]{100}");
+    QRegExp regExp("[a-zA-Z0-9 ]{100}");
     pName->setValidator(new QRegExpValidator(regExp, this));
-    pCmd->setValidator(new QRegExpValidator(regExp, this));
-    pNote->setValidator(new QRegExpValidator(regExp, this));
+    QRegExp regExp0("[a-fA-F0-9 ]{100}");
+    pCmd->setValidator(new QRegExpValidator(regExp0, this));
+    //pNote->setValidator(new QRegExpValidator(regExp, this));
 
     pLayout01->addWidget(pName);
     pLayout01->addWidget(pCmd);
@@ -35,7 +36,7 @@ DataBase::DataBase(QDialog *parent) :
     QPushButton *pOKBtn = new QPushButton("确定");
 
     connect(pOKBtn, &QPushButton::released, this, &DataBase::ok_btn_clicked);
-    connect(pCancelBtn, &QPushButton::released, this, &DataBase::ok_btn_clicked);
+    connect(pCancelBtn, &QPushButton::released, this, &DataBase::cancel_btn_clicked);
     connect(pUpdateBtn, &QPushButton::released, this, &DataBase::update_btn_clicked);
 
     pLayout02->addStretch(1);
@@ -66,6 +67,18 @@ DataBase::DataBase(QDialog *parent) :
                         "QPushButton:pressed{background-color:rgb(255, 170, 0);"
                         "border-style: inset;}"
                         "QLineEdit{background-color: rgb(255, 255, 255)};");
+    this->setWindowFlags(/*Qt::WindowCloseButtonHint |*/ Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+}
+
+DataBase::~DataBase()
+{
+    //qDebug()<<"xigou<< ";
+    delete pName;
+    delete pCmd;
+    delete pNote;
+    delete mpView;
+    delete mpModel;
+    QSqlDatabase::removeDatabase("QSQLITE");
 }
 
 void DataBase::cmd_doubleclicked(const QModelIndex &index)
@@ -79,7 +92,8 @@ void DataBase::cmd_doubleclicked(const QModelIndex &index)
 }
 void DataBase::ok_btn_clicked()
 {
-
+    update_btn_clicked();
+    emit this->ok_pressed();
 }
 
 void DataBase::update_btn_clicked()
@@ -88,6 +102,14 @@ void DataBase::update_btn_clicked()
     QString str;
 //    str = "select * from MainTable where ID like '"+pName->text()+"%'";
 //    mpModel->setQuery(str);
+
+    if(-1 == pCmd->text().indexOf("87"))
+    {
+#if DEBUG_EN
+        qDebug()<<"cmd format error";
+#endif
+        return;
+    }
 
     str = "UPDATE MainTable SET note = '"+pNote->text()+"' WHERE ID = '"+pName->text()+"'";
     mpModel->setQuery(str);
@@ -106,9 +128,57 @@ void DataBase::update_btn_clicked()
 }
 void DataBase::cancel_btn_clicked()
 {
+#if DEBUG_EN
     qDebug()<<"cancel_btn_clicked ";
+#endif
+    delete this;
 }
+/*
+ *函数功能：按照命令name 进行查询
+ *函数参数：time 格式:yyyy-MM-dd ，QString类型
+ *返回数据：true，执行成功；
+ *        false，执行失败。
+ */
+void DataBase::nameSearch(QString time)
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where time like '"+time+"%'";
+    mpModel->setQuery(str);
+}
+/*
+ *函数功能：按照命令name 进行查询
+ *函数参数：time 格式:yyyy-MM-dd ，QString类型
+ *返回数据：true，执行成功；
+ *        false，执行失败。
+ */
+QString DataBase::getVoice2MCmd()
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where ID like '2M'";
+    mpModel->setQuery(str);
 
+    return getRecord(0).value(1).toString();
+}
+QString DataBase::getVoiceStartCmd()
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where ID like 'vStart'";
+    mpModel->setQuery(str);
+
+    return getRecord(0).value(1).toString();
+}
+QString DataBase::getVoiceStopCmd()
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where ID like 'vStop'";
+    mpModel->setQuery(str);
+
+    return getRecord(0).value(1).toString();
+}
 /*
  *函数功能：创建数据库连接，初始化数据了视图，指定初始化的数据库表tableName
  *返回值： -1 创建数据库链接失败；
@@ -120,15 +190,21 @@ int DataBase::InitDataBase(void)
 
     if(flag & (0x01))
     {
+#if DEBUG_EN
         qDebug()<<QObject::tr("数据库创建连接失败或者数据已经存在！");
+#endif
     }
     if(flag & (0x02))
     {
+#if DEBUG_EN
         qDebug()<<QObject::tr("MainTable表创建失败或者该表已经存在！");
+#endif
     }
     if(flag & (0x04))
     {
+#if DEBUG_EN
         qDebug()<<QObject::tr("Device表创建失败或者该表已经存在！");
+#endif
     }
 
     return 1;
@@ -188,12 +264,16 @@ int DataBase::ExportExcel(QString fileName,
         QString sheetName;
         sheetName = SheetName;//"page";
         //"fileName"必须是一个带路径的文件名QString，否则无效
+#if DEBUG_EN
         qDebug() <<"fileName"<<fileName;
+#endif
         //
         QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "connection");
         if(!db.isValid())
         {
+#if DEBUG_EN
             qDebug() << "export2Excel failed: QODBC not supported.";
+#endif
             return -2;
         }
         //设置DSN
@@ -202,7 +282,9 @@ int DataBase::ExportExcel(QString fileName,
         db.setDatabaseName(dsn);
         if(!db.open())
         {
+#if DEBUG_EN
             qDebug() << "export2Excel failed: Create Excel file failed by DRIVER={Microsoft Excel Driver (*.xls)}.";
+#endif
             QSqlDatabase::removeDatabase("connection");
             return -3;
         }
@@ -216,12 +298,16 @@ int DataBase::ExportExcel(QString fileName,
         sSql = QString("CREATE TABLE [%1] (").arg(sheetName);
         sSql+="[ID] char(20),[Node] char(20),[Channel] char(20),[value] char(20),[time] char(20)";
         sSql += ")";
+#if DEBUG_EN
         qDebug()<<"sSql"<<sSql;
+#endif
         query.prepare(sSql);//在调用query.exec()之后才能执行
 
         if(!query.exec())
         {
+#if DEBUG_EN
             qDebug() << "export2Excel failed: Create Excel sheet failed.";
+#endif
             db.close();
             QSqlDatabase::removeDatabase("connection");
             return -4;
@@ -294,86 +380,7 @@ int DataBase::createConnection()
 
     return flag;
 }
-/*
- *函数功能：按照命令name 进行查询
- *函数参数：time 格式:yyyy-MM-dd ，QString类型
- *返回数据：true，执行成功；
- *        false，执行失败。
- */
-void DataBase::nameSearch(QString time)
-{
-    //bool flag;
-    QString str;
-    str = "select * from MainTable where time like '"+time+"%'";
-    mpModel->setQuery(str);
-}
-/*
- *函数功能：数据库的查询，按照时间查询
- *函数参数：time 格式:yyyy-MM-dd ，QString类型
- *返回数据：true，执行成功；
- *        false，执行失败。
- */
-void DataBase::timeSearch(QString time)
-{
-    //bool flag;
-    QString str;
-    str = "select * from MainTable where time like '"+time+"%'";
-    mpModel->setQuery(str);
-    //qDebug()<<str;
-    //return flag;
-}
-/*
- *函数功能：按照节点和通道进行数据库查询
- *函数参数：节点，node;通道 channel
- *返回数据: 查询成功返回true,查询失败返回false;
- */
-void DataBase::nodeSearch(QString node,
-                          int channel)
-{
-    QString str;
-    if(channel)
-    {
-        str = "select * from MainTable where Node ='"+
-                node+"' and channel ="+QString::number(channel,10);
-    }
-    else
-    {
-        str = "select * from MainTable where Node ='"+node+"'";
-    }
-    qDebug()<<str;
-    mpModel->setQuery(str);
 
-    //return flag;
-}
-/*
- *函数功能：返回全部的数据
- */
-void DataBase::ScreenDataBase()
-{
-    mpModel->setQuery("select * from MainTable");
-}
-/*
- *函数功能：按照时间，节点，通道来查询
- */
-void DataBase::timeNodeSearch(QString time,
-                              QString node,
-                              int channel)
-{
-    QString str;
-    if(channel)
-    {
-        str = "select * from MainTable where Node ='"+
-                node+"' and channel ="+QString::number(channel,10);
-    }
-    else
-    {
-        str = "select * from MainTable where Node ='"+node+"'";
-    }
-    str = str+" and time like '"+time+"%'";
-    str = "select * from MainTable";
-    qDebug()<<str;
-    mpModel->setQuery(str);
-}
 
 /*
  *函数功能：获取QRecord
@@ -387,18 +394,7 @@ QSqlRecord DataBase::getRecord(int row)
     else
         return QSqlRecord();
 }
-/*
- *函数功能：获取数据库中record的数目
- */
-long DataBase::getRecordNum(QString tablename)
-{
-    if(tablename == "MainTable")
-        return mpModel->rowCount();//获取表格中的数据条数
-    if(tablename == "DeviceTable")
-        return mpDeviceModel->rowCount();
-    else
-        return 0;
-}
+
 /*
  *函数功能：往数据库MainTable表中插入一条记录
  */
@@ -433,114 +429,6 @@ bool DataBase::insertRecord(
 
     return true;
 }
-/*
- *函数功能：往数据库DeviceTable表中插入一条设备记录
- *        如果该deviceId的设备已经存在，则现将其删除然后再插入
- *        重载函数。
- */
-void DataBase::insertDeviceRecord(QTableView *mpDeviceView,
-                                  QString deviceId,//该ID已经是节点Id和通道Id
-                                  QString nodename,
-                                  QString nodearea,
-                                  QString alertTvalue,
-                                  QString sampleinterval,
-                                  QString channelname)
-{
-    QString alertTvalue1 = alertTvalue+QObject::tr("℃");
-    if("" == alertTvalue)
-        alertTvalue1 = "";
-    QString sampleinterval1 = sampleinterval+"s";//采样间隔
-    if(sampleinterval == "")
-        sampleinterval1 = "";
 
-    mpDeviceModel->setQuery(QString("delete from DeviceTable where DeviceId=")+
-                            deviceId);
-
-    mpDeviceModel->setQuery(QString("insert into DeviceTable values('"+
-                                    deviceId+"','"+/*1，设备ID*/
-                                    nodename+"','"+/*2，设备名称*/
-                                    nodearea+"','"+/*3，设备所在区域*/
-                                    alertTvalue1+"','"+/*4，温度阀值*/
-                                    sampleinterval1+"','"+/*5，采样间隔*/
-                                    channelname+"')"));/*6，通道名称*/
-    mpDeviceModel->setQuery("select * from DeviceTable");
-}
-/*
- *函数功能：往数据库DeviceTable表中插入一条设备记录
- *        如果该deviceId的设备已经存在，则现将其删除然后再插入。
- *        重载函数。
- *@参数：数据库中的一条完整记录，QSqlRecord。
- */
-void DataBase::insertDeviceRecord(QSqlRecord mRecord)
-{
-    //温度阀值
-    QString alertTvalue1;
-    if(mRecord.value(3).toString().right(1) == QObject::tr("℃"))
-        alertTvalue1 = mRecord.value(3).toString();
-    else
-        alertTvalue1 = mRecord.value(3).toString()
-                +QObject::tr("℃");
-    if(QObject::tr("℃") == alertTvalue1)
-        alertTvalue1 = "";
-    //采样间隔
-    QString sampleinterval1;
-    if(mRecord.value(4).toString().right(1) == "s")
-        sampleinterval1 = mRecord.value(4).toString();
-    else
-        sampleinterval1 = mRecord.value(4).toString()+"s";//采样间隔
-    if(sampleinterval1 == "s")
-        sampleinterval1 = "";
-
-    //将原来的记录删除
-    mpDeviceModel->setQuery(QString("delete from DeviceTable where DeviceId='")+
-                            mRecord.value(0).toString()+"'");
-    //插入新的记录
-    mpDeviceModel->setQuery(QString("insert into DeviceTable values('"+
-                                    mRecord.value(0).toString()+"','"+/*1，设备ID*/
-                                    mRecord.value(1).toString()+"','"+/*2，设备名称*/
-                                    mRecord.value(2).toString()+"','"+/*3，设备所在区域*/
-                                    alertTvalue1+"','"+/*4，温度阀值*/
-                                    sampleinterval1+"','"+/*5，采样间隔*/
-                                    mRecord.value(5).toString()+"')"));/*6，通道名称*/
-    mpDeviceModel->setQuery("select * from DeviceTable");
-}
-/*
- *函数功能：从设备数据表中获取指定id的一条记录。
- *函数返回：若存在指定设备Id的记录，则返回第一条记录，
- *         若不存在则返回一条空记录。
- *注   意：使用此函数时，一定要记得判断返回的记录是否为指定的ID，
- *        否则是不存在此设备Id的设备记录。
- */
-QSqlRecord DataBase::getDeviceRecord(QString deviceId)
-{
-    QString str = QString("select * from DeviceTable where DeviceId='")+
-            deviceId+"'";
-    mpDeviceModel->setQuery(str);
-    //获取指定deviceId的记录
-    QSqlRecord r = mpDeviceModel->record(0);
-    qDebug()<<str;
-    mpDeviceModel->
-            setQuery(QString("select * from DeviceTable"));
-    return r;
-}
-
-/*
- *查询设备列表，并将结果集显示到指定的view中
- */
-void DataBase::updateDeviceView(QString deviceId)//QTableView *mpDeviceView
-{
-    //mpDeviceView = mpDeviceView;
-    //    long l = getRecordNum("DeviceTable");
-    //    for(long i=0;i<l;i++)
-    //    {
-    //        qDebug()<<mpDeviceModel->record(i).value(0).toString();
-    //    }
-
-    mpDeviceModel->setQuery(
-                QString("select * from DeviceTable where DeviceId='131a008'"));
-    //获取指定deviceId的记录
-    QSqlRecord r = mpDeviceModel->record(0);
-    qDebug()<<r;
-}
 
 

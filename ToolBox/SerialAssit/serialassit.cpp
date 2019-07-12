@@ -2,7 +2,9 @@
 #include <QSerialPortInfo>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#if DEBUG_EN
 #include <QDebug>
+#endif
 #include <QByteArray>
 #include <QFile>
 #include <QAudioFormat>
@@ -30,13 +32,9 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     //                                          "border-style: inset;}");
 
     /*1. 串口参数设置*/
-    pComNumLabel = new QLabel(tr("端口号："));
     pComNum = new zComBox();
     pComOpenBtn = new QPushButton(tr("打开串口"));
-    pComBaudRateLabel = new QLabel(tr("波特率："));
     pComBaudRate = new QComboBox();
-    //pRevTextEdit = new QPlainTextEdit();
-
 
     pSendEdit = new QLineEdit();
     pSendBtn = new QPushButton("指令发送");
@@ -60,12 +58,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     connect(pSendUart2M, &QPushButton::released, this, voice_cmd_handler);
     connect(pSettingBtn, &QPushButton::released, this, voice_setting_handler);
 
-    pAudioPlay = new QPushButton(tr("播放语音"));
-    pAudioSave = new QPushButton(tr("保存语音"));
 
     connect(pComOpenBtn,&QPushButton::released,this,comopen);
-    connect(pAudioPlay,&QPushButton::released,this,audioplay);
-    connect(pAudioSave,&QPushButton::released,this,audiosave);
     connect(pSendBtn,&QPushButton::released,this,comsend);
     connect(pComNum, &zComBox::combox_clicked, this, com_num_brush);
 
@@ -182,6 +176,21 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout04->addWidget(p, 0, Qt::AlignBottom|Qt::AlignCenter);
     pLayout04->addSpacing(10);
     //pLayout04->addStretch(1);
+
+    /*
+     * 获取指令集
+     */
+    mpDb = new DataBase();//ui->mDataView
+    mpDb->InitDataBase();//初始化数据库
+    mpDb->InitDeviceView();//初始化数据记录的模型视图
+    voice_cmd_map[VOICE_CMD_2M] = mpDb->getVoice2MCmd();
+    voice_cmd_map[VOICE_CMD_START] = mpDb->getVoiceStartCmd();
+    voice_cmd_map[VOICE_CMD_STOP] = mpDb->getVoiceStopCmd();
+
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
+    delete mpDb;
 }
 /*
  * @brief 曲线右键菜单
@@ -228,27 +237,44 @@ void SerialAssit::show_region_context_menu(QMouseEvent *event)
 }
 void SerialAssit::voice_setting_handler()
 {
+#if DEBUG_EN
     qDebug()<<"voice_setting";
+#endif
+    //DataBase *mpDb;
     mpDb = new DataBase();//ui->mDataView
     mpDb->InitDataBase();//初始化数据库
 
     mpDb->InitDeviceView();//初始化数据记录的模型视图
 
-    mpDb->insertRecord("2M",
-                       "87 10 11 01 E4 E1",
-                       "none");
+//    mpDb->insertRecord("2M",
+//                       "87 10 11 01 E4 E1",
+//                       "none");
 
-    mpDb->insertRecord("vStart",
-                       "87 05 11 73 75",
-                       "none");
-    mpDb->insertRecord("vStop",
-                       "87 06 11 73 85",
-                       "none");
-
-
+//    mpDb->insertRecord("vStart",
+//                       "87 05 11 73 75",
+//                       "none");
+//    mpDb->insertRecord("vStop",
+//                       "87 06 11 73 85",
+//                       "none");
 
     mpDb->show();
 
+    connect(mpDb, &DataBase::ok_pressed, this, &SerialAssit::setting_window_ok_pressed);
+
+}
+void SerialAssit::setting_window_ok_pressed()
+{
+#if DEBUG_EN
+    qDebug()<<"setting_window_ok_pressed";
+#endif
+    voice_cmd_map[VOICE_CMD_2M] = mpDb->getVoice2MCmd();
+    voice_cmd_map[VOICE_CMD_START] = mpDb->getVoiceStartCmd();
+    voice_cmd_map[VOICE_CMD_STOP] = mpDb->getVoiceStopCmd();
+
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
+//    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
+    delete mpDb;
 }
 
 void SerialAssit::voice_cmd_handler()
@@ -270,23 +296,23 @@ void SerialAssit::voice_cmd_handler()
         switch(index)
         {
         case VOICE_CMD_2M:
-            cmd =  QString2Hex(voice_cmd_2M);
+            cmd =  QString2Hex(voice_cmd_map[VOICE_CMD_2M]);//QString2Hex(voice_cmd_2M);
             break;
         case VOICE_CMD_START:
-            cmd =  QString2Hex(voice_cmd_start);
+            cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_START]);//QString2Hex(voice_cmd_start);
 
             pSendStartVoice->setVisible(false);
             pSendStopVoice->setVisible(true);
 
             break;
         case VOICE_CMD_STOP:
-            cmd =  QString2Hex(voice_cmd_stop);
+            cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_STOP]);;
             pSendStartVoice->setVisible(true);
             pSendStopVoice->setVisible(false);
             break;
         default:break;
         }
-        //qDebug()<<"setting button: index = "<< index;
+        //qDebug()<<"setting button: cmd = "<< cmd;
 
         if (!cmd.isNull())
         {
@@ -402,7 +428,7 @@ void SerialAssit::comopen()
 
         /*关闭串口通信线程*/
         //pSerialPortThread->exitThread(false);
-        pSerialPortThread->exitThread(true);
+        pSerialPortThread->exitThread();
         if (pSerialPortThread == nullptr)
         {
 #if DEBUG_EN

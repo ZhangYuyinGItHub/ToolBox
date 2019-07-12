@@ -1,5 +1,7 @@
 #include "serialportthread.h"
+#if DEBUG_EN
 #include <QDebug>
+#endif
 #include <QByteArray>
 #include <QString>
 #include "serialassit.h"
@@ -79,7 +81,10 @@ void SerialPortThread::restartThread(void)
     {
         mBaud = BAUD3000000;
     }
-
+    else
+    {
+        mBaud = BAUD115200;
+    }
 
     myCom->setPortName(gComNum);
     myCom->open(QIODevice::ReadWrite);
@@ -104,7 +109,7 @@ void SerialPortThread::restartThread(void)
 #endif
     }
 }
-void SerialPortThread::exitThread(bool sw)
+void SerialPortThread::exitThread()
 {
     //pThread->quit();
     //pThread->terminate();

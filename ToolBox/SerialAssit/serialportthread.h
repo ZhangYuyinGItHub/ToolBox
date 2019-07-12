@@ -25,7 +25,7 @@ public:
     Win_QextSerialPort *myCom;
 
     //void run();
-    void exitThread(bool sw);
+    void exitThread();
     void setComNum(QString str);
     void setBaudRate(QString baudrate);
     void restartThread(void);
