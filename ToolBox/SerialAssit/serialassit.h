@@ -42,6 +42,7 @@ public:
     QPushButton *pSendUart2M;
     QPushButton *pSendStartVoice;
     QPushButton *pSendStopVoice;
+
     QPushButton *pSettingBtn;
 
     QCustomPlot *pPlot;
@@ -54,7 +55,8 @@ public:
         VOICE_CMD_2M = 0,
         VOICE_CMD_START = 1,
         VOICE_CMD_STOP = 2,
-        VOICE_SETTING = 3,
+        VOICE_CMD_USER0 = 3,
+        VOICE_CMD_USER1 = 4,
     };
 
     QMap<quint8, QString> voice_cmd_map;

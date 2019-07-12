@@ -1,6 +1,8 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+//#define DEBUG_EN 1
+
 #include <QWidget>
 #include <QTableView>
 #include <QSqlQueryModel>
@@ -71,6 +73,8 @@ public://成员函数
     QString getVoice2MCmd();
     QString getVoiceStartCmd();
     QString getVoiceStopCmd();
+    QString getVoiceUser0Cmd();
+    QString getVoiceUser1Cmd();
 
 signals:
     void ok_pressed();

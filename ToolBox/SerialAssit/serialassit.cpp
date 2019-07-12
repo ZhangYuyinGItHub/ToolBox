@@ -53,9 +53,17 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pSendUart2M->setObjectName(QString::number(VOICE_CMD_2M, 10));
     pSettingBtn = new QPushButton();
     pSettingBtn->setIcon(QIcon(":/new/prefix2/Image/setting.png"));
+    QPushButton *pUserBtn0 = new QPushButton();
+    pUserBtn0->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
+    pUserBtn0->setObjectName(QString::number(VOICE_CMD_USER0, 10));
+    QPushButton *pUserBtn1 = new QPushButton();
+    pUserBtn1->setIcon(QIcon(":/new/prefix1/Image/rescale_icon.png"));
+    pUserBtn1->setObjectName(QString::number(VOICE_CMD_USER1, 10));
     connect(pSendStartVoice, &QPushButton::released, this, voice_cmd_handler);
     connect(pSendStopVoice, &QPushButton::released, this, voice_cmd_handler);
     connect(pSendUart2M, &QPushButton::released, this, voice_cmd_handler);
+    connect(pUserBtn0, &QPushButton::released, this, voice_cmd_handler);
+    connect(pUserBtn1, &QPushButton::released, this, voice_cmd_handler);
     connect(pSettingBtn, &QPushButton::released, this, voice_setting_handler);
 
 
@@ -150,6 +158,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout05->addWidget(pSendStartVoice/*, 0, Qt::AlignRight|Qt::AlignTop*/);
     pLayout05->addWidget(pSendStopVoice/*, 0, Qt::AlignRight|Qt::AlignTop*/);
     pLayout05->addWidget(pSendUart2M/*, 0, Qt::AlignRight|Qt::AlignTop*/);
+    pLayout05->addWidget(pUserBtn0);
+    pLayout05->addWidget(pUserBtn1);
     pLayout05->addWidget(pSettingBtn);
 
     pLayout05->addStretch(1);
@@ -186,6 +196,8 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     voice_cmd_map[VOICE_CMD_2M] = mpDb->getVoice2MCmd();
     voice_cmd_map[VOICE_CMD_START] = mpDb->getVoiceStartCmd();
     voice_cmd_map[VOICE_CMD_STOP] = mpDb->getVoiceStopCmd();
+    voice_cmd_map[VOICE_CMD_USER0] = mpDb->getVoiceUser0Cmd();
+    voice_cmd_map[VOICE_CMD_USER1] = mpDb->getVoiceUser1Cmd();
 
 //    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
 //    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
@@ -270,6 +282,8 @@ void SerialAssit::setting_window_ok_pressed()
     voice_cmd_map[VOICE_CMD_2M] = mpDb->getVoice2MCmd();
     voice_cmd_map[VOICE_CMD_START] = mpDb->getVoiceStartCmd();
     voice_cmd_map[VOICE_CMD_STOP] = mpDb->getVoiceStopCmd();
+    voice_cmd_map[VOICE_CMD_USER0] = mpDb->getVoiceUser0Cmd();
+    voice_cmd_map[VOICE_CMD_USER1] = mpDb->getVoiceUser1Cmd();
 
 //    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
 //    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
@@ -309,6 +323,12 @@ void SerialAssit::voice_cmd_handler()
             cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_STOP]);;
             pSendStartVoice->setVisible(true);
             pSendStopVoice->setVisible(false);
+            break;
+        case VOICE_CMD_USER0:
+            cmd = QString2Hex(voice_cmd_map[VOICE_CMD_USER0]);
+            break;
+        case VOICE_CMD_USER1:
+            cmd = QString2Hex(voice_cmd_map[VOICE_CMD_USER1]);
             break;
         default:break;
         }

@@ -113,7 +113,10 @@ void SerialPortThread::exitThread()
 {
     //pThread->quit();
     //pThread->terminate();
-    myCom->close();
+    if (myCom->isOpen())
+    {
+        myCom->close();
+    }
 #if DEBUG_EN
     qDebug()<< "pSerialPort thread exit!!!";
 #endif

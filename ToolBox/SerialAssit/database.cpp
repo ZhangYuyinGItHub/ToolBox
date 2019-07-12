@@ -83,8 +83,8 @@ DataBase::~DataBase()
 
 void DataBase::cmd_doubleclicked(const QModelIndex &index)
 {
-//    qDebug()<<"double clicked,row = "<<index.row();
-//    qDebug()<<"column = "<<index.column();
+    //    qDebug()<<"double clicked,row = "<<index.row();
+    //    qDebug()<<"column = "<<index.column();
 
     pName->setText(getRecord(index.row()).value(0).toString());
     pCmd->setText(getRecord(index.row()).value(1).toString());
@@ -98,11 +98,6 @@ void DataBase::ok_btn_clicked()
 
 void DataBase::update_btn_clicked()
 {
-
-    QString str;
-//    str = "select * from MainTable where ID like '"+pName->text()+"%'";
-//    mpModel->setQuery(str);
-
     if(-1 == pCmd->text().indexOf("87"))
     {
 #if DEBUG_EN
@@ -111,17 +106,25 @@ void DataBase::update_btn_clicked()
         return;
     }
 
-    str = "UPDATE MainTable SET note = '"+pNote->text()+"' WHERE ID = '"+pName->text()+"'";
+    QString str;
+    str = "select * from MainTable where ID like '"+pName->text()+"%'";
     mpModel->setQuery(str);
+    if (GetTableCount() == -1)// add new record if id not exist
+    {
+        insertRecord(pName->text(), pCmd->text(), pNote->text());
+    }
+    else
+    {// update record
+        str = "UPDATE MainTable SET note = '"+pNote->text()+"' WHERE ID = '"+pName->text()+"'";
+        mpModel->setQuery(str);
 
-
-    str = "UPDATE MainTable SET cmd = '"+pCmd->text()+"' WHERE ID = '"+pName->text()+"'";
-    mpModel->setQuery(str);
-
+        str = "UPDATE MainTable SET cmd = '"+pCmd->text()+"' WHERE ID = '"+pName->text()+"'";
+        mpModel->setQuery(str);
+    }
 
     mpModel->setQuery("select * from MainTable");
 
-    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(0,60);//设置主键所在列的宽度
     mpView->setColumnWidth(1,180);//设置主键所在列的宽度
     mpView->setColumnWidth(2,60);//设置主键所在列的宽度
 
@@ -179,6 +182,24 @@ QString DataBase::getVoiceStopCmd()
 
     return getRecord(0).value(1).toString();
 }
+QString DataBase::getVoiceUser0Cmd()
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where ID like 'vUser0'";
+    mpModel->setQuery(str);
+
+    return getRecord(0).value(1).toString();
+}
+QString DataBase::getVoiceUser1Cmd()
+{
+    //bool flag;
+    QString str;
+    str = "select * from MainTable where ID like 'vUser1'";
+    mpModel->setQuery(str);
+
+    return getRecord(0).value(1).toString();
+}
 /*
  *函数功能：创建数据库连接，初始化数据了视图，指定初始化的数据库表tableName
  *返回值： -1 创建数据库链接失败；
@@ -228,7 +249,7 @@ void DataBase::InitDeviceView()
     mpModel->setHeaderData(1,Qt::Horizontal,tr("指令"));
     mpModel->setHeaderData(2,Qt::Horizontal,tr("note"));
 
-    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(0,60);//设置主键所在列的宽度
     mpView->setColumnWidth(1,180);//设置主键所在列的宽度
     mpView->setColumnWidth(2,60);//设置主键所在列的宽度
 
@@ -415,7 +436,7 @@ bool DataBase::insertRecord(
 
     mpModel->setQuery("select * from MainTable");
 
-    mpView->setColumnWidth(0,50);//设置主键所在列的宽度
+    mpView->setColumnWidth(0,60);//设置主键所在列的宽度
     mpView->setColumnWidth(1,180);//设置主键所在列的宽度
     mpView->setColumnWidth(2,60);//设置主键所在列的宽度
     mpView->verticalScrollBar()
