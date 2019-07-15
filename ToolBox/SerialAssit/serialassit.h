@@ -1,6 +1,8 @@
 #ifndef SERIALASSIT_H
 #define SERIALASSIT_H
 
+#define DEBUG_EN  1
+
 /**
   * @note  本功能的实现使用QSerialPort类，但是有个问题是当窗口拖动的时候会出现丢数据的问题；
   *        可以后续尝试使用第三方库 Qextserialport
@@ -50,6 +52,7 @@ public:
     quint32 gRevDataLen;
     QByteArray gRevbuf;
 
+    QLabel *pLabel;
     enum
     {
         VOICE_CMD_2M = 0,
@@ -58,6 +61,15 @@ public:
         VOICE_CMD_USER0 = 3,
         VOICE_CMD_USER1 = 4,
     };
+
+    typedef enum
+    {
+        SYS_STATE_IDLE = 0,
+        SYS_STATE_VOICE_START = 1,
+        SYS_STATE_VOICE_STOP = 2,
+        SYS_STATE_CMD = 3,
+    }sys_state;
+    sys_state gSysState,gPreSysState;
 
     QMap<quint8, QString> voice_cmd_map;
     /*

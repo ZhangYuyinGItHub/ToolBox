@@ -145,12 +145,13 @@ void SerialPortThread::comread()
     quint16 length = arr.length();
     if (length %2)
     {
-        arr.remove(length, 1);
-        length -= 1;
+//        arr.remove(length, 1);
+//        length -= 1;
 
 #if DEBUG_EN
         qDebug()<< "thread04:";
         qDebug()<<QThread::currentThreadId();
+        qDebug()<<"rev arr = "<<ByteArrayToString(arr);
 #endif
     }
 
@@ -172,6 +173,7 @@ void SerialPortThread::comwrite(QByteArray arr)
 #endif
 
         myCom->write(arr);
+        myCom->flush();
     }
     else
     {
@@ -213,4 +215,10 @@ void SerialPortThread::setBaudRate(QString baudrate)
 boolean SerialPortThread::getSerialPortStatus(void)
 {
     return myCom->isOpen();
+}
+
+void SerialPortThread::clearBuffer()
+{
+    gRevBuffer.clear();
+    gRevDataLen = 0;
 }

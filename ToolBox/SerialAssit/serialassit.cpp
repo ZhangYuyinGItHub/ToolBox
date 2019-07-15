@@ -165,10 +165,18 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout05->addStretch(1);
 
     QVBoxLayout *pLayout04 = new QVBoxLayout(pPlot);
-    //pLayout04->addSpacing(13);
-    //pLayout04->addWidget(pComOpenBtn, 0, Qt::AlignRight|Qt::AlignTop);
-    //pLayout04->addWidget(pAudioPlay, 0, Qt::AlignRight|Qt::AlignTop);
-    //pLayout04->addWidget(pAudioSave, 0, Qt::AlignRight|Qt::AlignTop);
+
+    pLayout04->addStretch(1);
+    pLabel = new QLabel("12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1");
+    pLabel->setMinimumHeight(60);
+    pLabel->setWordWrap(true);
+    pLabel->setMargin(20);
+    pLabel->setAlignment(Qt::AlignCenter);
+    pLabel->setStyleSheet("QLabel{"
+                          "background-color: rgb(233, 233, 233, 190);"
+                          "font: 15pt;"
+                          "}");
+    pLayout04->addWidget(pLabel, 10, Qt::AlignVCenter);
 
     //pLayout04->addStretch(1);
     p->setStyleSheet("QWidget{"
@@ -183,7 +191,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
                      "QPushButton:pressed{"
                      "background-color:rgb(155, 100, 100);"
                      "border-style: inset;}");
-    pLayout04->addWidget(p, 0, Qt::AlignBottom|Qt::AlignCenter);
+    pLayout04->addWidget(p, 1, Qt::AlignBottom);
     pLayout04->addSpacing(10);
     //pLayout04->addStretch(1);
 
@@ -199,10 +207,16 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     voice_cmd_map[VOICE_CMD_USER0] = mpDb->getVoiceUser0Cmd();
     voice_cmd_map[VOICE_CMD_USER1] = mpDb->getVoiceUser1Cmd();
 
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
     delete mpDb;
+
+    /*
+     * system config
+     */
+    gSysState = SYS_STATE_IDLE;
+    gPreSysState = SYS_STATE_IDLE;
 }
 /*
  * @brief 曲线右键菜单
@@ -255,20 +269,7 @@ void SerialAssit::voice_setting_handler()
     //DataBase *mpDb;
     mpDb = new DataBase();//ui->mDataView
     mpDb->InitDataBase();//初始化数据库
-
     mpDb->InitDeviceView();//初始化数据记录的模型视图
-
-//    mpDb->insertRecord("2M",
-//                       "87 10 11 01 E4 E1",
-//                       "none");
-
-//    mpDb->insertRecord("vStart",
-//                       "87 05 11 73 75",
-//                       "none");
-//    mpDb->insertRecord("vStop",
-//                       "87 06 11 73 85",
-//                       "none");
-
     mpDb->show();
 
     connect(mpDb, &DataBase::ok_pressed, this, &SerialAssit::setting_window_ok_pressed);
@@ -285,9 +286,9 @@ void SerialAssit::setting_window_ok_pressed()
     voice_cmd_map[VOICE_CMD_USER0] = mpDb->getVoiceUser0Cmd();
     voice_cmd_map[VOICE_CMD_USER1] = mpDb->getVoiceUser1Cmd();
 
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
-//    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_2M] = "<<voice_cmd_map[VOICE_CMD_2M];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_START] = "<<voice_cmd_map[VOICE_CMD_START];
+    //    qDebug()<<"voice_cmd_map[VOICE_CMD_STOP] = "<<voice_cmd_map[VOICE_CMD_STOP];
     delete mpDb;
 }
 
@@ -311,6 +312,7 @@ void SerialAssit::voice_cmd_handler()
         {
         case VOICE_CMD_2M:
             cmd =  QString2Hex(voice_cmd_map[VOICE_CMD_2M]);//QString2Hex(voice_cmd_2M);
+            gSysState = SYS_STATE_CMD;
             break;
         case VOICE_CMD_START:
             cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_START]);//QString2Hex(voice_cmd_start);
@@ -318,25 +320,41 @@ void SerialAssit::voice_cmd_handler()
             pSendStartVoice->setVisible(false);
             pSendStopVoice->setVisible(true);
 
+            gSysState = SYS_STATE_VOICE_START;
+            pLabel->setVisible(false);
+
             break;
         case VOICE_CMD_STOP:
             cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_STOP]);;
             pSendStartVoice->setVisible(true);
             pSendStopVoice->setVisible(false);
+            gSysState = SYS_STATE_VOICE_STOP;
             break;
         case VOICE_CMD_USER0:
             cmd = QString2Hex(voice_cmd_map[VOICE_CMD_USER0]);
+            gSysState = SYS_STATE_CMD;
             break;
         case VOICE_CMD_USER1:
             cmd = QString2Hex(voice_cmd_map[VOICE_CMD_USER1]);
+            gSysState = SYS_STATE_CMD;
             break;
         default:break;
         }
-        //qDebug()<<"setting button: cmd = "<< cmd;
+       //qDebug()<<"gPreSysState="<<gPreSysState<<"gSysState = "<< gSysState;
 
         if (!cmd.isNull())
         {
+            if ((gPreSysState == SYS_STATE_VOICE_START)&&(gSysState != SYS_STATE_VOICE_STOP))
+            {
+                QMessageBox::information(NULL, "Info", tr("语音中...  "),
+                                         QMessageBox::Ok );
+                //gPreSysState = gSysState;
+                return;
+            }
             pSerialPortThread->comwrite(cmd);
+            gPreSysState = gSysState;
+            pLabel->clear();
+            pSerialPortThread->clearBuffer();
         }
     }
 }
@@ -647,11 +665,10 @@ void SerialAssit::serialDataRev()
     if ((length == 0)||(length <= gRevDataLen))
         return;
 
-
     QByteArray arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
     length0 = arr.length();
 
-    //for (;length > gRevDataLen; )
+    if (gSysState == SYS_STATE_VOICE_START)
     {
         for (quint32 index = 0  /*- gRevDataLen%2 */;
              index < length0; index += 2)
@@ -669,6 +686,15 @@ void SerialAssit::serialDataRev()
 
         pPlot->graph(0)->rescaleAxes();
         pPlot->replot();
+    }
+    else
+    {
+
+        pLabel->setVisible(true);
+        gRevDataLen += length0;
+        gRevbuf.append(arr);
+        pLabel->setText(ByteArrayToHexString(arr));
+        qDebug()<<"gRevbuf.length = "<<gRevbuf.length();
     }
 
 #if 0

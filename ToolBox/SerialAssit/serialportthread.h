@@ -34,6 +34,7 @@ public:
     QByteArray getRevDataArr(int start, int end);
     QString ByteArrayToString(QByteArray &ba);
     boolean getSerialPortStatus(void);
+    void clearBuffer();
 
 signals:
     void serialDataReady();
