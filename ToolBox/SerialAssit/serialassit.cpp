@@ -167,7 +167,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     QVBoxLayout *pLayout04 = new QVBoxLayout(pPlot);
 
     pLayout04->addStretch(1);
-    pLabel = new QLabel("12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1 12 34 56 78 9A BC DE F1");
+    pLabel = new QLabel();
     pLabel->setMinimumHeight(60);
     pLabel->setWordWrap(true);
     pLabel->setMargin(20);
@@ -176,6 +176,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
                           "background-color: rgb(233, 233, 233, 190);"
                           "font: 15pt;"
                           "}");
+    pLabel->setVisible(false);
     pLayout04->addWidget(pLabel, 10, Qt::AlignVCenter);
 
     //pLayout04->addStretch(1);
@@ -323,6 +324,19 @@ void SerialAssit::voice_cmd_handler()
             gSysState = SYS_STATE_VOICE_START;
             pLabel->setVisible(false);
 
+            /*clear*/
+            gRevDataLen = 0;
+            gRevbuf.clear();
+            pPlot->graph(0)->data().data()->clear();
+            pPlot->graph(0)->data().clear();//
+            pPlot->graph(0)->rescaleAxes();
+            pPlot->replot();
+            /*clear buffer data*/
+            pPlot->clearGraphs();
+            pPlot->addGraph();
+            pPlot->graph(0)->setPen(QPen(Qt::red));
+            pSerialPortThread->clearBuffer();
+
             break;
         case VOICE_CMD_STOP:
             cmd =   QString2Hex(voice_cmd_map[VOICE_CMD_STOP]);;
@@ -354,7 +368,9 @@ void SerialAssit::voice_cmd_handler()
             pSerialPortThread->comwrite(cmd);
             gPreSysState = gSysState;
             pLabel->clear();
-            pSerialPortThread->clearBuffer();
+            //pSerialPortThread->clearBuffer();
+
+            pSendEdit->setText(voice_cmd_map[index]);
         }
     }
 }
@@ -665,10 +681,11 @@ void SerialAssit::serialDataRev()
     if ((length == 0)||(length <= gRevDataLen))
         return;
 
+
     QByteArray arr = pSerialPortThread->getRevDataArr(gRevDataLen, length);
     length0 = arr.length();
 
-    if (gSysState == SYS_STATE_VOICE_START)
+    //for (;length > gRevDataLen; )
     {
         for (quint32 index = 0  /*- gRevDataLen%2 */;
              index < length0; index += 2)
@@ -686,15 +703,13 @@ void SerialAssit::serialDataRev()
 
         pPlot->graph(0)->rescaleAxes();
         pPlot->replot();
-    }
-    else
-    {
 
-        pLabel->setVisible(true);
-        gRevDataLen += length0;
-        gRevbuf.append(arr);
-        pLabel->setText(ByteArrayToHexString(arr));
-        qDebug()<<"gRevbuf.length = "<<gRevbuf.length();
+        if((gSysState == SYS_STATE_CMD) && (gPreSysState != SYS_STATE_VOICE_START))
+        {
+            pLabel->setVisible(true);
+            pLabel->setText(ByteArrayToHexString(arr));
+        }
+
     }
 
 #if 0

@@ -1,7 +1,7 @@
 #ifndef SERIALASSIT_H
 #define SERIALASSIT_H
 
-#define DEBUG_EN  1
+#define DEBUG_EN  0
 
 /**
   * @note  本功能的实现使用QSerialPort类，但是有个问题是当窗口拖动的时候会出现丢数据的问题；
