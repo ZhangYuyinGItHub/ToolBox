@@ -53,6 +53,7 @@ public:
     QByteArray gRevbuf;
 
     QLabel *pLabel;
+    QLabel *pSizeLabel;
     enum
     {
         VOICE_CMD_2M = 0,

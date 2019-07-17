@@ -165,6 +165,19 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout05->addStretch(1);
 
     QVBoxLayout *pLayout04 = new QVBoxLayout(pPlot);
+    pLayout04->setContentsMargins(30, 25, 30, 0);
+
+    //pLayout04->addSpacing(14);
+    pSizeLabel = new QLabel("0");
+    pSizeLabel->setMinimumHeight(22);
+    pSizeLabel->setMinimumWidth(100);
+    pSizeLabel->setAlignment(Qt::AlignCenter);
+    pSizeLabel->setStyleSheet("QLabel{"
+                              "background-color: rgb(233, 233, 233, 200);"
+                              "border-radius: 3px;"
+                              "font: 11pt;"
+                              "}");
+    pLayout04->addWidget(pSizeLabel, 0, Qt::AlignTop|Qt::AlignRight);
 
     pLayout04->addStretch(1);
     pLabel = new QLabel();
@@ -175,9 +188,12 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLabel->setStyleSheet("QLabel{"
                           "background-color: rgb(233, 233, 233, 190);"
                           "font: 15pt;"
+                          "border-radius: 1px;"
                           "}");
     pLabel->setVisible(false);
     pLayout04->addWidget(pLabel, 10, Qt::AlignVCenter);
+
+
 
     //pLayout04->addStretch(1);
     p->setStyleSheet("QWidget{"
@@ -193,7 +209,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
                      "background-color:rgb(155, 100, 100);"
                      "border-style: inset;}");
     pLayout04->addWidget(p, 1, Qt::AlignBottom);
-    pLayout04->addSpacing(10);
+    pLayout04->addSpacing(20);
     //pLayout04->addStretch(1);
 
     /*
@@ -354,7 +370,7 @@ void SerialAssit::voice_cmd_handler()
             break;
         default:break;
         }
-       //qDebug()<<"gPreSysState="<<gPreSysState<<"gSysState = "<< gSysState;
+        //qDebug()<<"gPreSysState="<<gPreSysState<<"gSysState = "<< gSysState;
 
         if (!cmd.isNull())
         {
@@ -708,8 +724,12 @@ void SerialAssit::serialDataRev()
         {
             pLabel->setVisible(true);
             pLabel->setText(ByteArrayToHexString(arr));
+            pSizeLabel->setText(QString::number(arr.length(), 10));
         }
-
+        else
+        {
+            pSizeLabel->setText(QString::number(gRevDataLen, 10));
+        }
     }
 
 #if 0
