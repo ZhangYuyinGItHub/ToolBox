@@ -165,7 +165,7 @@ SerialAssit::SerialAssit(QWidget *parent) : QWidget(parent)
     pLayout05->addStretch(1);
 
     QVBoxLayout *pLayout04 = new QVBoxLayout(pPlot);
-    pLayout04->setContentsMargins(30, 25, 30, 0);
+    pLayout04->setContentsMargins(40, 25, 30, 0);
 
     //pLayout04->addSpacing(14);
     pSizeLabel = new QLabel("0");
