@@ -17903,15 +17903,15 @@ void QCPAxisRect::wheelEvent(QWheelEvent *event)
             mRangeZoomHorzAxis.at(i)->scaleRange(factor, mRangeZoomHorzAxis.at(i)->pixelToCoord(event->pos().x()));
         }
       }
-      if (mRangeZoom.testFlag(Qt::Vertical))
-      {
-        factor = qPow(mRangeZoomFactorVert, wheelSteps);
-        for (int i=0; i<mRangeZoomVertAxis.size(); ++i)
-        {
-          if (!mRangeZoomVertAxis.at(i).isNull())
-            mRangeZoomVertAxis.at(i)->scaleRange(factor, mRangeZoomVertAxis.at(i)->pixelToCoord(event->pos().y()));
-        }
-      }
+//      if (mRangeZoom.testFlag(Qt::Vertical))
+//      {
+//        factor = qPow(mRangeZoomFactorVert, wheelSteps);
+//        for (int i=0; i<mRangeZoomVertAxis.size(); ++i)
+//        {
+//          if (!mRangeZoomVertAxis.at(i).isNull())
+//            mRangeZoomVertAxis.at(i)->scaleRange(factor, mRangeZoomVertAxis.at(i)->pixelToCoord(event->pos().y()));
+//        }
+//      }
       mParentPlot->replot();
     }
   }
