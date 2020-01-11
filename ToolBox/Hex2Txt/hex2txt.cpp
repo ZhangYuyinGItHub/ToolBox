@@ -5,7 +5,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
-#include <QDebug>
 #include <QFile>
 #include <QByteArray>
 #include <QMessageBox>
@@ -59,16 +58,30 @@ Hex2Txt::Hex2Txt(QWidget *parent) : QWidget(parent)
 
 void Hex2Txt::on_load_btn_released()
 {
-    qDebug()<<"load btn release.";
+
+    //qDebug()<<"load btn release.";
     QString filestr = QFileDialog::getOpenFileName(this, tr("选取二进制文件"), "","*.bin ;; *.dat",0);
     if (filestr.isNull())
         return;
     pLoadPath->setText(filestr);
+
+    QFile loadfile2(pLoadPath->text());
+    if(!loadfile2.open(QIODevice::ReadOnly))
+    {
+        return;
+    }
+    QByteArray arr;
+    arr = loadfile2.readAll();
+
+    QString str = Hex2Text_handle(arr);
+    pHexEdit->setPlainText(str);
+    ////qDebug()<<arr;
+    loadfile2.close();
 }
 
 void Hex2Txt::on_save_btn_released()
 {
-    qDebug()<<"save btn release.";
+    //qDebug()<<"save btn release.";
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出文本文件"), "","*.txt;;*.*",0);
     if (!fileout.isNull())
         pSavePath->setText(fileout);
@@ -83,8 +96,9 @@ QString Hex2Txt::Hex2Text_handle(QByteArray input)
     {
         QByteArray b;
         b[0] = input[index];
-        str += LABEL_STR;
+
         str += b.toHex();
+        str += LABEL_STR;
     }
     return str;
 }
@@ -100,8 +114,8 @@ void Hex2Txt::on_convert_btn_released()
     arr = loadfile2.readAll();
 
     QString str = Hex2Text_handle(arr);
-    pHexEdit->setPlainText(str);
-    //qDebug()<<arr;
+    //pHexEdit->setPlainText(str);
+    ////qDebug()<<arr;
     loadfile2.close();
 
     /*打开保存文件*/
@@ -112,8 +126,9 @@ void Hex2Txt::on_convert_btn_released()
     }
     QTextStream qts(&savefile2);
     qts<<str;
-    pTxtEdit->setPlainText(str);
     savefile2.close();
+
+    pTxtEdit->setPlainText(str);
     QMessageBox::information(NULL, "Tip", tr("success! "),
                              QMessageBox::Ok );
 }

@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QTextStream>
 
 class Txt2Hex : public QWidget
 {

@@ -31,7 +31,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     CRC/JQChecksum.cpp \
     Hex2Txt/hex2txt.cpp \
-    patcket/packet.cpp \
     SerialAssit/serialassit.cpp \
     Txt2Hex/txt2hex.cpp \
     main.cpp \
@@ -51,7 +50,6 @@ SOURCES += \
 HEADERS += \
     CRC/JQChecksum.h \
     Hex2Txt/hex2txt.h \
-    patcket/packet.h \
     SerialAssit/serialassit.h \
     Txt2Hex/txt2hex.h \
     mainwindow.h \

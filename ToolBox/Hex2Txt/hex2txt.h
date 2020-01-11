@@ -6,6 +6,8 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QByteArray>
+#include <QTextStream>
+#define  HEX2TXT_DEBUG_EN   0
 
 class Hex2Txt : public QWidget
 {

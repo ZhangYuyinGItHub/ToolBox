@@ -5,7 +5,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
-#include <QDebug>
+//#include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
 
@@ -59,7 +59,7 @@ Txt2Hex::Txt2Hex(QWidget *parent) : QWidget(parent)
 
 void Txt2Hex::on_load_btn_released()
 {
-    qDebug()<<"load btn release.";
+    //qDebug()<<"load btn release.";
     QString filestr = QFileDialog::getOpenFileName(this, tr("选取文件"), "","*.txt",0);
     if (filestr.isNull())
         return;
@@ -68,7 +68,7 @@ void Txt2Hex::on_load_btn_released()
 
 void Txt2Hex::on_save_btn_released()
 {
-    qDebug()<<"save btn release.";
+    //qDebug()<<"save btn release.";
     QString fileout = QFileDialog::getOpenFileName(this, tr("输出文件"), "","*.bin",0);
     if (!fileout.isNull())
         pSavePath->setText(fileout);
@@ -76,7 +76,7 @@ void Txt2Hex::on_save_btn_released()
 
 void Txt2Hex::on_convert_btn_released()
 {
-    qDebug()<<"convert btn release.";
+    //qDebug()<<"convert btn release.";
     /*打开原始文件*/
     QFile loadfile(pLoadPath->text());
     if(!loadfile.open(QIODevice::ReadOnly|QIODevice::Text))
@@ -101,7 +101,7 @@ void Txt2Hex::on_convert_btn_released()
     pTxtEdit->setPlainText(str);
     if (arr.isNull())
     {
-        qDebug()<<"no string: " + QString(LABEL_STR);
+        //qDebug()<<"no string: " + QString(LABEL_STR);
 
         return;
     }
@@ -139,8 +139,8 @@ QString Txt2Hex::Hex2Text_handle(QByteArray input)
     {
         QByteArray b;
         b[0] = input[index];
-        str += LABEL_STR;
         str += b.toHex();
+        str += LABEL_STR;
     }
     return str;
 }
