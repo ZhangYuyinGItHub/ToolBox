@@ -34,7 +34,7 @@ void SerialPortThread::serialThreadStarted()
         //定义一个结构体，用来存放串口各个参数
         struct PortSettings myComSetting = {BAUD115200,DATA_8,PAR_NONE,STOP_1,FLOW_OFF,500};
         //定义串口对象，并传递参数，在构造函数里对其进行初始化
-        myCom = new Win_QextSerialPort("com3",myComSetting,QextSerialBase::EventDriven);
+        myCom = new Win_QextSerialPort(gComNum,myComSetting,QextSerialBase::EventDriven);
 
     }
     else
@@ -86,7 +86,7 @@ void SerialPortThread::restartThread(void)
         mBaud = BAUD115200;
     }
 
-    myCom->setPortName(gComNum);
+    myCom->setPortName(gComNum);//
     myCom->open(QIODevice::ReadWrite);
     if (myCom->isOpen())
     {
@@ -205,7 +205,15 @@ QByteArray SerialPortThread::getRevDataArr(int start, int end)
 void SerialPortThread::setComNum(QString str)
 {
     gComNum.clear();
-    gComNum = str;
+
+    if (str.length() > QString("COM1").length())
+    {
+        gComNum = "\\\\.\\" + str;
+    }
+    else
+    {
+        gComNum = str;
+    }
 }
 void SerialPortThread::setBaudRate(QString baudrate)
 {
