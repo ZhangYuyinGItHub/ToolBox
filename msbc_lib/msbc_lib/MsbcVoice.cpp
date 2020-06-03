@@ -27,60 +27,83 @@ void voice_msbc_encoder(char* input, char* output)
     if ((output == NULL) || (strlen(output) == 0))
         return;
 
-	sbc_t msbc;
-	msbc.bitpool = MSBC_BITPOOL;
-	msbc.blocks = MSBC_BLOCKS;
-	msbc.channels = MSBC_CHANNELS;
-	msbc.joint = MSBC_JOINT;
-	msbc.subbands = MSBC_SUBBANDS;
-	msbc.rate = MSBC_SAMPLERATE;
+    sbc_t msbc;
+    msbc.bitpool = MSBC_BITPOOL;
+    msbc.blocks = MSBC_BLOCKS;
+    msbc.channels = MSBC_CHANNELS;
+    msbc.joint = MSBC_JOINT;
+    msbc.subbands = MSBC_SUBBANDS;
+    msbc.rate = MSBC_SAMPLERATE;
 
-	sbc_init(&msbc, 0);
+    sbc_init(&msbc, 0);
 
     string rfile = input;
-	ifstream rf;
-	rf.open(rfile.c_str(),ios::binary | ios::in);
-	streampos pos;
-	rf.seekg(0, ios::end);
-	pos = rf.tellg();
-	rf.seekg(0, ios::beg);
-	size_t FileLength = size_t(pos);
+    ifstream rf;
+    rf.open(rfile.c_str(),ios::binary | ios::in);
+    streampos pos;
+    rf.seekg(0, ios::end);
+    pos = rf.tellg();
+    rf.seekg(0, ios::beg);
+    size_t FileLength = size_t(pos);
 
-	char *ch = (char *)malloc(FileLength);
-	memset(ch, 1, FileLength);
+    char *ch = (char *)malloc(FileLength);
+    memset(ch, 1, FileLength);
 
-	rf.read(ch, FileLength);
-	rf.close();
+    rf.read(ch, FileLength);
+    rf.close();
 
-	size_t FrameCount = FileLength / 240;
+    size_t FrameCount = FileLength / 240;
     void *PcmBuffer = (void *)malloc(PCM_FRAME_SIZE);
-	void *MsbcBuffer = (void *)malloc(60);
+    void *MsbcBuffer = (void *)malloc(60);
 
-	ofstream wf;
+    ofstream wf;
     wf.open(output, ios::binary | ios::out);
 
 
-	for (int i = 0; i < int(FrameCount); i++)
-	{
-		int encoded = 0;
-		memset(PcmBuffer, 0, PCM_FRAME_SIZE);
-		//memset(MsbcBuffer, 0, MSBC_FRAME_SIZE);
-		memset(MsbcBuffer, 0, 60);
+    uint8_t tog = 0;
+    for (int i = 0; i < int(FrameCount); i++)
+    {
+        int encoded = 0;
+        memset(PcmBuffer, 0, PCM_FRAME_SIZE);
+        //memset(MsbcBuffer, 0, MSBC_FRAME_SIZE);
+        memset(MsbcBuffer, 0, 60);
 
-		memcpy(PcmBuffer, &ch[i*PCM_FRAME_SIZE], PCM_FRAME_SIZE);
-		sbc_encode(&msbc, PcmBuffer, PCM_FRAME_SIZE, ((unsigned char*)MsbcBuffer+2),
-			   MSBC_FRAME_SIZE, &encoded);
+        if (tog % 4 == 0)
+        {
+            *((unsigned char*)MsbcBuffer + 0) = 0x01;
+            *((unsigned char*)MsbcBuffer + 1) = 0x08;
+        }
+        else if (tog % 4 == 1)
+        {
+            *((unsigned char*)MsbcBuffer + 0) = 0x01;
+            *((unsigned char*)MsbcBuffer + 1) = 0x38;
+        }
+        else if (tog % 4 == 2)
+        {
+            *((unsigned char*)MsbcBuffer + 0) = 0x01;
+            *((unsigned char*)MsbcBuffer + 1) = 0xc8;
+        }
+        else if (tog % 4 == 3)
+        {
+            *((unsigned char*)MsbcBuffer + 0) = 0x01;
+            *((unsigned char*)MsbcBuffer + 1) = 0xf8;
+        }
+        tog++;
 
-		if (encoded != MSBC_FRAME_SIZE)
-			break;
-		wf.write((char *)MsbcBuffer, MSBC_FRAME_SIZE+3);
-	}
-	wf.close();
+        memcpy(PcmBuffer, &ch[i*PCM_FRAME_SIZE], PCM_FRAME_SIZE);
+        sbc_encode(&msbc, PcmBuffer, PCM_FRAME_SIZE, ((unsigned char*)MsbcBuffer+2),
+                   MSBC_FRAME_SIZE, &encoded);
 
-	free(PcmBuffer);
-	free(MsbcBuffer);
-	free(ch);
-	return ;
+        if (encoded != MSBC_FRAME_SIZE)
+            break;
+        wf.write((char *)MsbcBuffer, MSBC_FRAME_SIZE+3);
+    }
+    wf.close();
+
+    free(PcmBuffer);
+    free(MsbcBuffer);
+    free(ch);
+    return ;
 }
 
 void voice_msbc_decoder(char* input, char* output)
@@ -91,59 +114,59 @@ void voice_msbc_decoder(char* input, char* output)
     if ((output == NULL) || (strlen(output) == 0))
         return;
 
-	sbc_t msbc;
-	msbc.bitpool = MSBC_BITPOOL;
-	msbc.blocks = MSBC_BLOCKS;
-	msbc.channels = MSBC_CHANNELS;
-	msbc.joint = MSBC_JOINT;
-	msbc.subbands = MSBC_SUBBANDS;
-	msbc.rate = MSBC_SAMPLERATE;
+    sbc_t msbc;
+    msbc.bitpool = MSBC_BITPOOL;
+    msbc.blocks = MSBC_BLOCKS;
+    msbc.channels = MSBC_CHANNELS;
+    msbc.joint = MSBC_JOINT;
+    msbc.subbands = MSBC_SUBBANDS;
+    msbc.rate = MSBC_SAMPLERATE;
 
-	sbc_init(&msbc, 0);
+    sbc_init(&msbc, 0);
 
     string rfile = input;
-	ifstream rf;
-	rf.open(rfile.c_str(),ios::binary | ios::in);
-	streampos pos;
-	rf.seekg(0, ios::end);
-	pos = rf.tellg();
-	rf.seekg(0, ios::beg);
-	size_t FileLength = size_t(pos);
+    ifstream rf;
+    rf.open(rfile.c_str(),ios::binary | ios::in);
+    streampos pos;
+    rf.seekg(0, ios::end);
+    pos = rf.tellg();
+    rf.seekg(0, ios::beg);
+    size_t FileLength = size_t(pos);
 
-	char *ch = (char *)malloc(FileLength);
-	memset(ch, 1, FileLength);
+    char *ch = (char *)malloc(FileLength);
+    memset(ch, 1, FileLength);
 
-	rf.read(ch, FileLength);
-	rf.close();
+    rf.read(ch, FileLength);
+    rf.close();
 
-	//size_t FrameCount = FileLength / MSBC_FRAME_SIZE;
-	size_t FrameCount = FileLength / 60;
-	void *PcmBuffer = (void *)malloc(PCM_FRAME_SIZE);
-	//void *MsbcBuffer = (void *)malloc(MSBC_FRAME_SIZE);
-	void *MsbcBuffer = (void *)malloc(60);
+    //size_t FrameCount = FileLength / MSBC_FRAME_SIZE;
+    size_t FrameCount = FileLength / 60;
+    void *PcmBuffer = (void *)malloc(PCM_FRAME_SIZE);
+    //void *MsbcBuffer = (void *)malloc(MSBC_FRAME_SIZE);
+    void *MsbcBuffer = (void *)malloc(60);
 
-	ofstream wf;
+    ofstream wf;
     wf.open(output, ios::binary | ios::out);
 
 
-	for (int i = 0; i < int(FrameCount); i++)
-	{
-		int encoded = 0;
-		memset(PcmBuffer, 0, PCM_FRAME_SIZE);
-		//memset(MsbcBuffer, 0, MSBC_FRAME_SIZE);
-		memset(MsbcBuffer, 0, 60);
+    for (int i = 0; i < int(FrameCount); i++)
+    {
+        int encoded = 0;
+        memset(PcmBuffer, 0, PCM_FRAME_SIZE);
+        //memset(MsbcBuffer, 0, MSBC_FRAME_SIZE);
+        memset(MsbcBuffer, 0, 60);
 
-		//memcpy(MsbcBuffer, &ch[i*MSBC_FRAME_SIZE], MSBC_FRAME_SIZE);
-		memcpy(MsbcBuffer, &ch[i*60+2], MSBC_FRAME_SIZE);
-		sbc_decode(&msbc, MsbcBuffer, MSBC_FRAME_SIZE, PcmBuffer, PCM_FRAME_SIZE, &encoded);//MsbcCodec
-		if (encoded != PCM_FRAME_SIZE)
-			break;
-		wf.write((char *)PcmBuffer, PCM_FRAME_SIZE);
-	}
-	wf.close();
+        //memcpy(MsbcBuffer, &ch[i*MSBC_FRAME_SIZE], MSBC_FRAME_SIZE);
+        memcpy(MsbcBuffer, &ch[i*60+2], MSBC_FRAME_SIZE);
+        sbc_decode(&msbc, MsbcBuffer, MSBC_FRAME_SIZE, PcmBuffer, PCM_FRAME_SIZE, &encoded);//MsbcCodec
+        if (encoded != PCM_FRAME_SIZE)
+            break;
+        wf.write((char *)PcmBuffer, PCM_FRAME_SIZE);
+    }
+    wf.close();
 
-	free(PcmBuffer);
-	free(MsbcBuffer);
-	free(ch);
-	return ;
+    free(PcmBuffer);
+    free(MsbcBuffer);
+    free(ch);
+    return ;
 }
