@@ -4,7 +4,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
-#include <QDebug>
+//#include <QDebug>
 #include <QObject>
 #include <QLabel>
 #include "voice.h"

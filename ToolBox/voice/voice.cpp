@@ -1,7 +1,7 @@
 #include "voice.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QDebug>
+//#include <QDebug>
 #include <QByteArray>
 #include <QFile>
 #include <QAudioFormat>

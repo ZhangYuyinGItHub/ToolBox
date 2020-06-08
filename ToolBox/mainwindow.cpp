@@ -7,7 +7,7 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <QByteArrayData>
-#include <QDebug>
+//#include <QDebug>
 #include "./Hex2Txt/hex2txt.h"
 #include "./Txt2Hex/txt2hex.h"
 #include "./SerialAssit/serialassit.h"

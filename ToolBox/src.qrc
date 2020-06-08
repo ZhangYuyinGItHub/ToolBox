@@ -11,6 +11,5 @@
         <file>Image/start.png</file>
         <file>Image/stop.png</file>
         <file>Image/save.png</file>
-        <file>Image/logo.png</file>
     </qresource>
 </RCC>
