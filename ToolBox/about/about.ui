@@ -22,8 +22,8 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Tool Box v2.4
-2019-07-12</string>
+        <string>Tool Box v2.5
+2020-06-08</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignBottom|Qt::AlignHCenter</set>

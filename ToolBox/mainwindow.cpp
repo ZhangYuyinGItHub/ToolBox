@@ -13,6 +13,7 @@
 #include "./SerialAssit/serialassit.h"
 #include "./about/about.h"
 #include "./voice/voice.h"
+#include "./AES/aesdecrypt.h"
 
 #define  LABEL_STR         " "//"0x"
 #define  LABEL_LEN         0x01
@@ -59,6 +60,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     about *pAbout = new about();
     pTabWidget->insertTab(5, pAbout, "About");
+
+    AesDecrypt *pAesDecrypt = new AesDecrypt();
+    pTabWidget->insertTab(2, pAesDecrypt, "Aes");
 
 
     this->setContentsMargins(10,0,10,10);

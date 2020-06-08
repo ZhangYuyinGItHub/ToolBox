@@ -45,7 +45,10 @@ SOURCES += \
     SerialAssit/qextserialport.cpp \
     SerialAssit/win_qextserialport.cpp \
     SerialAssit/zcombox.cpp \
-    SerialAssit/database.cpp
+    SerialAssit/database.cpp \
+    AES/aesdecrypt.cpp \
+    AES/aes/aes_handle_voice.c \
+    AES/aes/aes.c
 
 HEADERS += \
     CRC/JQChecksum.h \
@@ -66,7 +69,11 @@ HEADERS += \
     SerialAssit/qextserialport.h \
     SerialAssit/win_qextserialport.h \
     SerialAssit/zcombox.h \
-    SerialAssit/database.h
+    SerialAssit/database.h \
+    AES/aesdecrypt.h \
+    AES/aes/image_header.h \
+    AES/aes/aes.h \
+    AES/aes/aes_hanlde_vocie.h
 
 FORMS += \
     about/about.ui
