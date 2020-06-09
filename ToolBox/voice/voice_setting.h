@@ -8,6 +8,12 @@
 #include <QComboBox>
 #include <QSpinBox>
 
+//static const unsigned blockNumbers[4] = {4,  8,  12,  16};
+//static const unsigned subbandNumbers[2]   = {4,  8};
+
+static const unsigned blockNumbers[4] = {0,  1,  2,  3};
+static const unsigned subbandNumbers[2]   = {0,  1};
+
 class voice_setting : public QDialog
 {
     Q_OBJECT
@@ -69,6 +75,7 @@ public:
     int getAdpcmParam();
     int getVoiceChalMode();
     int getVoiceSampleRate();
+    void setSbcParam(unsigned char* buf, int len);
 signals:
 
 public slots:

@@ -191,12 +191,12 @@ void voice_setting::voice_config_ok()
 
     if (gVoiceCodecType == SBC_TYPE_CODEC)
     {
-        gSbcParam.allocMethod = pAllocModeCombox->currentIndex();
-        gSbcParam.bitpool     = pBitPoolSpinBox->value();
-        gSbcParam.blockNumber = pBlockNumCombox->currentIndex();
-        gSbcParam.channelMode = pChanModeCombox->currentIndex();
+        gSbcParam.allocMethod       = pAllocModeCombox->currentIndex();
+        gSbcParam.bitpool           = pBitPoolSpinBox->value();
+        gSbcParam.blockNumber       = pBlockNumCombox->currentIndex();
+        gSbcParam.channelMode       = pChanModeCombox->currentIndex();
         gSbcParam.samplingFrequency = pSamFreqCombox->currentIndex();
-        gSbcParam.subbandNumber = pSubBandCombox->currentIndex();
+        gSbcParam.subbandNumber     = pSubBandCombox->currentIndex();
 
         //qDebug()<< "---sbc---->"<<gSbcParam.samplingFrequency;
 
@@ -255,4 +255,39 @@ int voice_setting::getVoiceChalMode()
 int voice_setting::getVoiceSampleRate()
 {
     return gSbcParam.samplingFrequency;
+}
+
+void voice_setting::setSbcParam(unsigned char* pInputBuffer, int inputSize)
+{
+    unsigned int c;
+    unsigned char *pIn = pInputBuffer;
+
+    if (inputSize < 3)
+    {
+        return ;
+    }
+
+    /* read header */
+    c = *pIn++;
+    if (c != 0x9C)
+    {
+        return ;
+    }
+
+    c = *pIn++;
+    gSbcParam.samplingFrequency = (c >> 6) & 0x03;
+    gSbcParam.blockNumber = blockNumbers[(c >> 4) & 0x03];
+    gSbcParam.channelMode = (c >> 2) & 0x03;
+    gSbcParam.allocMethod = (c >> 1) & 0x01;
+    gSbcParam.subbandNumber = subbandNumbers[(c >> 0) & 0x01];
+    gSbcParam.bitpool = *pIn++;
+
+    pAllocModeCombox->setCurrentIndex(gSbcParam.allocMethod );
+    pBitPoolSpinBox->setValue(gSbcParam.bitpool) ;
+    pBlockNumCombox->setCurrentIndex( gSbcParam.blockNumber);
+    pChanModeCombox->setCurrentIndex(gSbcParam.channelMode);
+    pSamFreqCombox->setCurrentIndex(gSbcParam.samplingFrequency);
+    pSubBandCombox->setCurrentIndex(gSbcParam.subbandNumber);
+
+    return ;
 }

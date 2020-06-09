@@ -158,7 +158,7 @@ void voice::audio_state_changed(QAudio::State state)
 {
     if (state != QAudio::ActiveState)
     {
-        qDebug()<<"audio state is "<<state;
+        //qDebug()<<"audio state is "<<state;
         //audio->stop();
         //delete audiodev;
     }
@@ -283,6 +283,8 @@ void voice::show_region_context_menu(QMouseEvent *event)
         }
         else if (selectaction == pClear)
         {
+            if (pPlotL->graphCount() == 0)
+                return;
             pPlotL->graph(0)->data().clear();
             pPlotL->removeGraph(0);
             pPlotL->replot();
@@ -401,7 +403,19 @@ void voice::codec_2_pcm(void)
     {
         ret = psbc->sbc_decode(pSbcInFilePath->text().toLatin1().data(),
                                pPcmOutFilePath->text().toLatin1().data());
-        qDebug()<<"sbc decoder ret = "<<ret;
+
+        QFile loadfile2(pSbcInFilePath->text());
+        if(!loadfile2.open(QIODevice::ReadOnly))
+        {
+            return;
+        }
+        QByteArray arr;
+        arr = loadfile2.read(3);
+        loadfile2.close();
+        pVSetting->setSbcParam((unsigned char*)arr.data(), 3);
+        //qDebug()<<"sbc decoder ret = "<<ret;
+
+
     }
     else if (mAudioCodecMode == 1)
     {
@@ -416,6 +430,7 @@ void voice::codec_2_pcm(void)
 
     if (1)//((ret > 7)||(ret == 0))
     {
+
         drawAudioPlot(pPcmOutFilePath->text());
         //audioplay(pPcmOutFilePath->text());
         audio_start_play(pPcmOutFilePath->text());
@@ -440,6 +455,10 @@ void voice::drawAudioPlot(QString filename)
     }
 
     QByteArray arr = inputFile->readAll();
+
+    /*2. 关闭文件*/
+    inputFile->close();
+
     if (arr.size() > 600*1024)
     {
         QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot! 600k exceeed"),
@@ -449,13 +468,20 @@ void voice::drawAudioPlot(QString filename)
         arr = arr.left(600*1024);
     }
 
-    /*2. 画图*/
+    /*3. 画图*/
 
     if (pVSetting->getVoiceChalMode() == 0)
     {
+        pPlotR->graph(0)->data().clear();
+        pPlotR->removeGraph(0);
+        pPlotR->setVisible(false);
+//        pPlotL->graph(0)->rescaleAxes();
+//        pPlotL->replot();
+
         //不添加一下两行的话，时间会比较久
         pPlotL->removeGraph(0);
         pPlotL->addGraph(0);
+
 
         for (int index = 0; index < arr.size(); index = index + 2)
         {
@@ -465,18 +491,21 @@ void voice::drawAudioPlot(QString filename)
             i0 = (((i0<<8) )| (arr[index] & 0xff));
 
             pPlotL->graph(0)->addData(index, i0);
-        }
 
+        }
         pPlotL->graph(0)->rescaleAxes();
         pPlotL->replot();
     }
     else
     {
         //不添加一下两行的话，时间会比较久
+
         pPlotL->removeGraph(0);
         pPlotL->addGraph(0);
         pPlotR->removeGraph(0);
         pPlotR->addGraph(0);
+
+        pPlotR->setVisible(true);
 
         for (int index = 0; index < arr.size() - 4; index = index + 4)
         {
@@ -495,9 +524,6 @@ void voice::drawAudioPlot(QString filename)
         pPlotR->graph(0)->rescaleAxes();
         pPlotR->replot();
     }
-
-    /*3. 关闭文件*/
-    inputFile->close();
 }
 
 void voice::audioplay(QString filepath)

@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //pPacket->show();
     Hex2Txt* pHex2Tex = new Hex2Txt();
-    pTabWidget->insertTab(0, pHex2Tex, "HexToTxt");
+    pTabWidget->insertTab(0, pHex2Tex, "Hex2Txt");
 
     Txt2Hex *pTxt2Hex = new Txt2Hex();
     pTabWidget->insertTab(1, pTxt2Hex, "Txt2Hex");
