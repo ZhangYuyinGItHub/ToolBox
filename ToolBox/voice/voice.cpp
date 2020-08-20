@@ -274,8 +274,11 @@ void voice::show_region_context_menu(QMouseEvent *event)
         {
             pPlotL->graph(0)->rescaleAxes();
             pPlotL->replot();//pPlotL->graph(0)->data().data()->remove(100*1024);
-            pPlotR->graph(0)->rescaleAxes();
-            pPlotR->replot();
+            if (pVSetting->getVoiceChalMode() >= 1)
+            {
+                pPlotR->graph(0)->rescaleAxes();
+                pPlotR->replot();
+            }
         }
         else if (selectaction == pRepaly)
         {
@@ -288,9 +291,12 @@ void voice::show_region_context_menu(QMouseEvent *event)
             pPlotL->graph(0)->data().clear();
             pPlotL->removeGraph(0);
             pPlotL->replot();
-            pPlotR->graph(0)->data().clear();
-            pPlotR->removeGraph(0);
-            pPlotR->replot();
+            if (pVSetting->getVoiceChalMode() >= 1)
+            {
+                pPlotR->graph(0)->data().clear();
+                pPlotR->removeGraph(0);
+                pPlotR->replot();
+            }
             audio->stop();
             pAudioInputFile->close();
         }
@@ -353,13 +359,13 @@ void voice::pcm_file_output(void)
 
 void voice::pcm_2_sbc(void)
 {
-//    static quint32 offset = 0;offset += 60*1024;
-//    pPlotL->graph(0)->data().data()->removeBefore(offset);
-//    pPlotL->graph(0)->rescaleAxes();
-//    pPlotL->replot();
-//    pPlotR->graph(0)->data().data()->removeBefore(offset);
-//    pPlotR->graph(0)->rescaleAxes();
-//    pPlotR->replot();
+    //    static quint32 offset = 0;offset += 60*1024;
+    //    pPlotL->graph(0)->data().data()->removeBefore(offset);
+    //    pPlotL->graph(0)->rescaleAxes();
+    //    pPlotL->replot();
+    //    pPlotR->graph(0)->data().data()->removeBefore(offset);
+    //    pPlotR->graph(0)->rescaleAxes();
+    //    pPlotR->replot();
 
 
     if ((pPcmInFilePath->text() == "")||(pPcmInFilePath == NULL))
@@ -428,7 +434,7 @@ void voice::codec_2_pcm(void)
                               pPcmOutFilePath->text().toLatin1().data());
     }
 
-    if (1)//((ret > 7)||(ret == 0))
+    if (ret == 0)
     {
 
         drawAudioPlot(pPcmOutFilePath->text());
@@ -459,6 +465,11 @@ void voice::drawAudioPlot(QString filename)
     /*2. 关闭文件*/
     inputFile->close();
 
+    if (arr.size() == 0)
+    {
+        return;
+    }
+
     if (arr.size() > 600*1024)
     {
         QMessageBox::information(NULL, "Info", tr("Failed: not enough buffer for plot! 600k exceeed"),
@@ -472,16 +483,16 @@ void voice::drawAudioPlot(QString filename)
 
     if (pVSetting->getVoiceChalMode() == 0)
     {
-        pPlotR->graph(0)->data().clear();
-        pPlotR->removeGraph(0);
+        if (pPlotR->graphCount() >= 1)
+        {
+            pPlotR->graph(0)->data().clear();//添加此行，多次点击会死机
+            pPlotR->removeGraph(0);
+        }
         pPlotR->setVisible(false);
-//        pPlotL->graph(0)->rescaleAxes();
-//        pPlotL->replot();
 
         //不添加一下两行的话，时间会比较久
         pPlotL->removeGraph(0);
         pPlotL->addGraph(0);
-
 
         for (int index = 0; index < arr.size(); index = index + 2)
         {

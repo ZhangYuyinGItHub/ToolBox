@@ -86,11 +86,14 @@ voice_setting::voice_setting(QWidget *parent, unsigned char type) : QDialog(pare
         pVLayout02->addWidget(pAllocModeCombox);
         pVLayout02->addWidget(pSubBandCombox);
 
-
         pHLayout01->addLayout(pVLayout01);
         pHLayout01->addLayout(pVLayout02);
 
-        pSbcGroup->setLayout(pHLayout01);
+        QVBoxLayout *pVLayout03 = new QVBoxLayout();
+        pVLayout03->addLayout(pHLayout01);
+        pVLayout03->addStretch();
+
+        pSbcGroup->setLayout(pVLayout03);
 
     }
     /*2. MSBC Config*/

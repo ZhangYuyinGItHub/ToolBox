@@ -43,6 +43,14 @@ int voice_sbc_decode(char *input, char *output)
         printf("[Decode] SBC Open Src File Failed!\n");
         return SBC_DECODE_SRC_FILE_OPEN_ERROR;
     }
+    else
+    {
+        int dataLength = 0;
+        fseek(fpSrc,0,SEEK_END);
+        dataLength = ftell (fpSrc);
+        if (dataLength == 0)
+            return SBC_ENCODE_SRC_FILE_LENGTH_ERROR;
+    }
 
     fpDes = fopen(output, "wb");
     printf("[Decode] SBC OPen Des File :<%s>\n", output);

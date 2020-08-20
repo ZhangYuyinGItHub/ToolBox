@@ -53,6 +53,12 @@ int voice_adpcm_encoder(char* src_file, char* des_file)
 		fseek(fpWav,0,SEEK_END);
 		dataLength = ftell (fpWav); 
 
+        if (dataLength == 0)
+        {
+            printf("[Decode] Source File Length 0\n");
+            return 0;
+        }
+
 		DecodeBuffer = (unsigned char*)malloc(dataLength); 
 		memset(DecodeBuffer, 0, dataLength);
 		fseek(fpWav,0,SEEK_SET);
@@ -137,6 +143,12 @@ int voice_adpcm_decoder(char* src_file, char* des_file)
 	{   
 		fseek(fpWav,0,SEEK_END);
 		dataLength = ftell (fpWav); 
+
+        if (dataLength == 0)
+        {
+            printf("[Decode] Source File Length 0\n");
+            return 0;
+        }
 
 		sample_num = dataLength * SAMPLE_NUM_PER_BYTE;
 

@@ -10,6 +10,8 @@ typedef enum
 	SBC_DECODE_DES_FILE_OPEN_ERROR,
 	SBC_ENCODE_SRC_FILE_OPEN_ERROR,
 	SBC_ENCODE_DES_FILE_OPEN_ERROR,
+    SBC_ENCODE_SRC_FILE_LENGTH_ERROR,
+    SBC_ENCODE_DES_FILE_LENGTH_ERROR,
 }ret_Code;
 
 int voice_sbc_decode(char *input, char *output);

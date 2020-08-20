@@ -264,6 +264,7 @@ int DataBase::GetTableCount()
     mpModel->query().last();
     return mpModel->query().at()+1;
 }
+#if 0
 /*
  *功能：将TableView导出到Excel文件
  *参数： fileName:带路径和Excel文件名的QString，否则无效
@@ -373,6 +374,7 @@ int DataBase::ExportExcel(QString fileName,
     QSqlDatabase::removeDatabase("connection");
     return 1;
 }
+#endif
 /*
  *函数功能：创建数据库链接
  */

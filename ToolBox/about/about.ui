@@ -23,7 +23,7 @@
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Tool Box v2.5
-2020-06-08</string>
+2020-06-19</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignBottom|Qt::AlignHCenter</set>
