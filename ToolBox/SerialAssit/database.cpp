@@ -431,6 +431,17 @@ bool DataBase::insertRecord(
     QString Node = cmd;
 
     KeyID = name;//.toString("yyyyMMddhhmmss");
+    if ((name.compare("vStart") != 0)
+            || (name.compare("vStop"))
+            || (name.compare("2M"))
+            || (name.compare("vUser0"))
+            || (name.compare("vUser1")))
+    {
+        QMessageBox::information(NULL, "Error", tr("Name Error! "),
+                                 QMessageBox::Ok );
+        return false;
+    }
+
     mpModel->setQuery(QString("insert into MainTable values('"+
                               KeyID+"','"+//ID
                               Node+"','"+       //节点,QString型，需要在SQL语句中添加''
