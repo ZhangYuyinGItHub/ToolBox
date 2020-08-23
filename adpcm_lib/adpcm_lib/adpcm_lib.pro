@@ -27,8 +27,7 @@ SOURCES += adpcm_lib.cpp \
 
 HEADERS += adpcm_lib.h \
     adpcm.h \
-    voice_adpcm.h \
-    wav.h
+    voice_adpcm.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
