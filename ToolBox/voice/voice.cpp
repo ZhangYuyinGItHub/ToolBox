@@ -131,116 +131,106 @@ voice::voice(QWidget *parent) : QWidget(parent)
 
     /*audio 设置*/
     {
-
         pAudioInputFile = new QFile();
-
-        //设置采样格式
-        QAudioFormat audioFormat;
-        //设置采样率
-        audioFormat.setSampleRate(16000);
-        //设置通道数
-        audioFormat.setChannelCount(2);
-        //设置采样大小，一般为8位或16位
-        audioFormat.setSampleSize(16);
-        //设置编码方式
-        audioFormat.setCodec("audio/pcm");
-        //设置字节序
-        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-        //设置样本数据类型
-        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
-
-        audio = new QAudioOutput( audioFormat, 0);
-
+        audio = new QAudioOutput();
         connect(audio, &QAudioOutput::stateChanged, this, &voice::audio_state_changed);
     }
 }
-void voice::audio_state_changed(QAudio::State state)
+void voice::audio_state_changed(QAudio::State newState)
 {
-    if (state != QAudio::ActiveState)
-    {
-        //qDebug()<<"audio state is "<<state;
-        //audio->stop();
-        //delete audiodev;
+    switch (newState) {
+    case QAudio::IdleState:
+        // Finished playing (no more data)
+        audio->stop();
+        pAudioInputFile->close();
+        delete audio;
+        audio = nullptr;
+
+    case QAudio::StoppedState:
+        // Stopped for other reasons
+
+        if (audio->error() != QAudio::NoError) {
+            // Error handling
+        }
+
+        audio->stop();
+        pAudioInputFile->close();
+        delete audio;
+        audio = nullptr;
+        break;
+
+    default:
+        // ... other cases as appropriate
+        break;
     }
 }
 
 void voice::audio_start_play(QString file_path)
 {
-    {
-        //QString file_path = "./AudioFile.pcm";
-        QFile *inputFile = new QFile(file_path);
-        pAudioInputFile->setFileName(file_path);
+    pAudioInputFile->setFileName(file_path);
 
+    if (!pAudioInputFile->isOpen())
+    {
         /*1. read audio data*/
-        inputFile->setFileName(file_path);
-        if (false == inputFile->open(QIODevice::ReadOnly))
+        if (false == pAudioInputFile->open(QIODevice::ReadOnly))
         {
             return ;
         }
-
-        QByteArray audio_data = inputFile->readAll();
-        inputFile->close();
-
-        /*2. create audio device*/
-        if (audiodev != nullptr)
-            delete audiodev;
-        audiodev = new audiodevice(audio_data); //创建自定义的IO设备
-
-        //设置采样格式
-        QAudioFormat audioFormat;
-        //设置采样率
-        switch (pVSetting->getVoiceSampleRate()) {
-        case 0:
-            audioFormat.setSampleRate(16000);
-            break;
-        case 1:
-            audioFormat.setSampleRate(32000);
-            break;
-        case 2:
-            audioFormat.setSampleRate(44100);
-            break;
-        case 3:
-            audioFormat.setSampleRate(48000);
-            break;
-        default:
-            break;
-        }
-        //设置通道数
-        //audioFormat.setChannelCount(2);
-        if (pVSetting->getVoiceChalMode() == 0)
-        {
-            pPlotR->setVisible(false);
-            audioFormat.setChannelCount(1);
-        }
-        else
-        {
-            pPlotR->setVisible(true);
-            audioFormat.setChannelCount(2);
-        }
-        //设置采样大小，一般为8位或16位
-        audioFormat.setSampleSize(16);
-        //设置编码方式
-        audioFormat.setCodec("audio/pcm");
-        //设置字节序
-        audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-        //设置样本数据类型
-        audioFormat.setSampleType(QAudioFormat::UnSignedInt);
-
-        if (audio != nullptr)
-        {
-            delete audio;
-        }
-
-        audio = new QAudioOutput( audioFormat, 0);
-        if (!audio)
-        {
-            return;
-        }
-        connect(audio, &QAudioOutput::stateChanged, this, &voice::audio_state_changed);
-        audio->start(audiodev);
-        //inputFile->close();//打开之后无法播放语音
-
     }
+
+    //设置采样格式
+    QAudioFormat audioFormat;
+    //设置采样率
+    switch (pVSetting->getVoiceSampleRate()) {
+    case 0:
+        audioFormat.setSampleRate(16000);
+        break;
+    case 1:
+        audioFormat.setSampleRate(32000);
+        break;
+    case 2:
+        audioFormat.setSampleRate(44100);
+        break;
+    case 3:
+        audioFormat.setSampleRate(48000);
+        break;
+    default:
+        break;
+    }
+    //设置通道数
+    //audioFormat.setChannelCount(2);
+    if (pVSetting->getVoiceChalMode() == 0)
+    {
+        pPlotR->setVisible(false);
+        audioFormat.setChannelCount(1);
+    }
+    else
+    {
+        pPlotR->setVisible(true);
+        audioFormat.setChannelCount(2);
+    }
+    //设置采样大小，一般为8位或16位
+    audioFormat.setSampleSize(16);
+    //设置编码方式
+    audioFormat.setCodec("audio/pcm");
+    //设置字节序
+    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    //设置样本数据类型
+    audioFormat.setSampleType(QAudioFormat::UnSignedInt);
+
+    if (audio != nullptr)
+    {
+        delete audio;
+        audio = nullptr;
+    }
+
+    audio = new QAudioOutput( audioFormat, 0);
+    if (!audio)
+    {
+        return;
+    }
+    connect(audio, &QAudioOutput::stateChanged, this, &voice::audio_state_changed);
+    audio->start(pAudioInputFile);
 }
 
 /*
@@ -257,11 +247,6 @@ void voice::show_region_context_menu(QMouseEvent *event)
         QAction *pRepaly = contextMenu.addAction("Replay");
         pRepaly->setIcon(QIcon(":/new/prefix1/Image/replay_icon.png"));
         QAction *pClear = contextMenu.addAction("Clear Data");
-        QAction *pSuspend;
-        if (audio->state() == QAudio::SuspendedState)
-            pSuspend = contextMenu.addAction("Resume Audio");
-        else
-            pSuspend = contextMenu.addAction("Suspend Audio");
         QAction *pStop = contextMenu.addAction("Stop Audio");
         contextMenu.addAction("...");
 
@@ -282,7 +267,7 @@ void voice::show_region_context_menu(QMouseEvent *event)
         }
         else if (selectaction == pRepaly)
         {
-            audioplay(pAudioInputFile->fileName());
+            audio_start_play(pAudioInputFile->fileName());
         }
         else if (selectaction == pClear)
         {
@@ -297,19 +282,23 @@ void voice::show_region_context_menu(QMouseEvent *event)
                 pPlotR->removeGraph(0);
                 pPlotR->replot();
             }
-            audio->stop();
-            pAudioInputFile->close();
-        }
-        else if (selectaction == pSuspend)
-        {
-            if (audio->state() == QAudio::SuspendedState)
-                audio->resume();
-            else
-                audio->suspend();
+            if (audio != nullptr)
+                audio->stop();
+            if (pAudioInputFile->isOpen())
+            {
+                pAudioInputFile->close();
+            }
         }
         else if (selectaction == pStop)
         {
-            audio->stop();
+            if (audio != nullptr)
+            {
+                audio->stop();
+            }
+            if (pAudioInputFile->isOpen())
+            {
+                pAudioInputFile->close();
+            }
         }
 
         //contextMenu.exec(QWidget::pos());
@@ -419,9 +408,6 @@ void voice::codec_2_pcm(void)
         arr = loadfile2.read(3);
         loadfile2.close();
         pVSetting->setSbcParam((unsigned char*)arr.data(), 3);
-        //qDebug()<<"sbc decoder ret = "<<ret;
-
-
     }
     else if (mAudioCodecMode == 1)
     {
@@ -436,9 +422,7 @@ void voice::codec_2_pcm(void)
 
     if (ret == 0)
     {
-
         drawAudioPlot(pPcmOutFilePath->text());
-        //audioplay(pPcmOutFilePath->text());
         audio_start_play(pPcmOutFilePath->text());
     }
     else
@@ -537,20 +521,6 @@ void voice::drawAudioPlot(QString filename)
     }
 }
 
-void voice::audioplay(QString filepath)
-{
-    pAudioInputFile->setFileName(filepath);
-    if (false == pAudioInputFile->open(QIODevice::ReadOnly))
-    {
-        QMessageBox::information(NULL, "Error", tr("Failed: audio file open failed."),
-                                 QMessageBox::Ok );
-        return ;
-    }
-
-    audio->start(pAudioInputFile);
-
-    //inputFile->close();//打开之后无法播放语音
-}
 void voice::voice_setting_ok_clicked()
 {
     if (pVSetting->getVoiceChalMode() == 0)
@@ -561,7 +531,6 @@ void voice::voice_setting_ok_clicked()
     {
         pPlotR->setVisible(true);
     }
-
 }
 
 /*
